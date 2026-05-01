@@ -1,0 +1,91 @@
+{% extends "base.html" %}
+{% block title %}{{ customer.name }}{% endblock %}
+{% block page_title %}{{ customer.name }}{% endblock %}
+{% block topbar_actions %}
+  <a href="{{ url_for('customer_edit', cid=customer.id) }}" class="btn btn-outline">✏️ {{ t.customers.btn_edit }}</a>
+  <a href="{{ url_for('invoice_new') }}" class="btn btn-primary">{{ t.invoices.new }}</a>
+{% endblock %}
+
+{% block content %}
+<div class="detail-grid" style="margin-bottom:22px">
+  <div class="detail-cell">
+    <div class="dk">{{ t.customers.detail_phone }}</div>
+    <div class="dv mono">{{ customer.phone or '—' }}</div>
+  </div>
+  <div class="detail-cell">
+    <div class="dk">{{ t.customers.detail_address }}</div>
+    <div class="dv">{{ customer.address or '—' }}</div>
+  </div>
+  {% if customer.notes %}
+  <div class="detail-cell" style="grid-column:1/-1">
+    <div class="dk">{{ t.customers.detail_notes }}</div>
+    <div class="dv">{{ customer.notes }}</div>
+  </div>
+  {% endif %}
+</div>
+
+{% if totals %}
+<div class="card" style="margin-bottom:22px">
+  <div class="card-header"><h2>{{ t.customers.debt_summary }}</h2></div>
+  <div class="table-wrap">
+    <table>
+      <thead><tr>
+        <th>{{ t.customers.col_currency }}</th>
+        <th>{{ t.customers.col_total }}</th>
+        <th>{{ t.customers.col_paid }}</th>
+        <th>{{ t.customers.col_remaining }}</th>
+      </tr></thead>
+      <tbody>
+        {% for row in totals %}
+        <tr>
+          <td>{{ row.currency | currency_symbol }}</td>
+          <td class="mono">{{ row.total_amount | fmt_number }}</td>
+          <td class="mono text-success">{{ row.paid_amount | fmt_number }}</td>
+          <td class="mono fw-bold {% if row.remaining > 0 %}text-danger{% else %}text-success{% endif %}">
+            {{ row.remaining | fmt_number }}
+          </td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+{% endif %}
+
+<div class="card">
+  <div class="card-header">
+    <h2>{{ t.customers.invoices_section }} ({{ invoices | length }})</h2>
+    <a href="{{ url_for('invoice_new') }}" class="btn btn-outline btn-sm">{{ t.invoices.new }}</a>
+  </div>
+  <div class="table-wrap">
+    <table>
+      <thead><tr>
+        <th>{{ t.invoices.col_number }}</th>
+        <th>{{ t.invoices.col_date }}</th>
+        <th>{{ t.invoices.col_total }}</th>
+        <th>{{ t.invoices.col_paid }}</th>
+        <th>{{ t.invoices.col_remaining }}</th>
+        <th>{{ t.invoices.col_status }}</th>
+        <th></th>
+      </tr></thead>
+      <tbody>
+        {% for inv in invoices %}
+        <tr>
+          <td class="mono fw-bold">{{ inv.invoice_number }}</td>
+          <td class="mono text-muted">{{ inv.date }}</td>
+          <td class="mono">{{ inv.total_amount | fmt_number }} {{ inv.currency | currency_symbol }}</td>
+          <td class="mono text-success">{{ inv.paid_amount | fmt_number }}</td>
+          <td class="mono fw-bold {% if inv.remaining > 0 %}text-danger{% endif %}">{{ inv.remaining | fmt_number }}</td>
+          <td><span class="badge badge-{{ inv.status }}">{{ inv.status | status_label }}</span></td>
+          <td><a href="{{ url_for('invoice_detail', inv_id=inv.id) }}" class="btn btn-outline btn-sm">{{ t.customers.btn_view }}</a></td>
+        </tr>
+        {% else %}
+        <tr><td colspan="7">
+          <div class="empty"><div class="empty-icon">🧾</div><p>{{ t.customers.no_invoices }}</p></div>
+        </td></tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+{% endblock %}

@@ -1,0 +1,55 @@
+{% extends "base.html" %}
+{% block title %}{{ t.customers.title }}{% endblock %}
+{% block page_title %}{{ t.customers.title }}{% endblock %}
+{% block topbar_actions %}
+  <a href="{{ url_for('customer_new') }}" class="btn btn-primary">{{ t.customers.new }}</a>
+{% endblock %}
+
+{% block content %}
+<div class="card">
+  <div class="card-body" style="padding-bottom:0">
+    <form method="get" class="search-bar">
+      <input type="text" name="q" value="{{ search }}" placeholder="{{ t.customers.placeholder_search }}">
+      <button type="submit" class="btn btn-outline">{{ t.btn.search }}</button>
+      {% if search %}<a href="{{ url_for('customers_list') }}" class="btn btn-outline">{{ t.btn.clear }}</a>{% endif %}
+    </form>
+  </div>
+  <div class="table-wrap">
+    <table>
+      <thead><tr>
+        <th>{{ t.customers.col_index }}</th>
+        <th>{{ t.customers.col_name }}</th>
+        <th>{{ t.customers.col_phone }}</th>
+        <th>{{ t.customers.col_address }}</th>
+        <th>{{ t.customers.col_date }}</th>
+        <th></th>
+      </tr></thead>
+      <tbody>
+        {% for c in customers %}
+        <tr>
+          <td class="mono text-muted">{{ loop.index }}</td>
+          <td><a href="{{ url_for('customer_detail', cid=c.id) }}" class="fw-bold">{{ c.name }}</a></td>
+          <td class="mono">{{ c.phone or '—' }}</td>
+          <td class="text-muted">{{ c.address or '—' }}</td>
+          <td class="mono text-muted">{{ c.created_at[:10] }}</td>
+          <td>
+            <div class="d-flex gap-2">
+              <a href="{{ url_for('customer_detail', cid=c.id) }}" class="btn btn-outline btn-sm">{{ t.customers.btn_view }}</a>
+              <a href="{{ url_for('customer_edit',   cid=c.id) }}" class="btn btn-outline btn-sm">{{ t.customers.btn_edit }}</a>
+            </div>
+          </td>
+        </tr>
+        {% else %}
+        <tr><td colspan="6">
+          <div class="empty">
+            <div class="empty-icon">👤</div>
+            <p>{% if search %}{{ t.customers.empty_search }} "{{ search }}"{% else %}{{ t.customers.empty }}{% endif %}</p>
+            {% if not search %}<a href="{{ url_for('customer_new') }}" class="btn btn-primary mt-2">{{ t.customers.btn_add_first }}</a>{% endif %}
+          </div>
+        </td></tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+{% endblock %}

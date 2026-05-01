@@ -1,0 +1,62 @@
+{% extends "base.html" %}
+{% block title %}{{ t.invoices.title }}{% endblock %}
+{% block page_title %}{{ t.invoices.title }}{% endblock %}
+{% block topbar_actions %}
+  <a href="{{ url_for('invoice_new') }}" class="btn btn-primary">{{ t.invoices.new }}</a>
+{% endblock %}
+
+{% block content %}
+<div class="card">
+  <div class="card-body" style="padding-bottom:0">
+    <form method="get" class="search-bar">
+      <input type="text" name="q" value="{{ search }}" placeholder="{{ t.invoices.placeholder_search }}">
+      <select name="status" style="width:auto">
+        <option value=""        {% if not status %}selected{% endif %}>{{ t.invoices.filter_all }}</option>
+        <option value="unpaid"  {% if status=='unpaid'  %}selected{% endif %}>{{ t.invoices.filter_unpaid }}</option>
+        <option value="partial" {% if status=='partial' %}selected{% endif %}>{{ t.invoices.filter_partial }}</option>
+        <option value="paid"    {% if status=='paid'    %}selected{% endif %}>{{ t.invoices.filter_paid }}</option>
+      </select>
+      <button type="submit" class="btn btn-outline">{{ t.btn.search }}</button>
+      {% if search or status %}<a href="{{ url_for('invoices_list') }}" class="btn btn-outline">{{ t.btn.clear }}</a>{% endif %}
+    </form>
+  </div>
+  <div class="table-wrap">
+    <table>
+      <thead><tr>
+        <th>{{ t.invoices.col_number }}</th>
+        <th>{{ t.invoices.col_customer }}</th>
+        <th>{{ t.invoices.col_date }}</th>
+        <th>{{ t.invoices.col_total }}</th>
+        <th>{{ t.invoices.col_paid }}</th>
+        <th>{{ t.invoices.col_remaining }}</th>
+        <th>{{ t.invoices.col_status }}</th>
+        <th></th>
+      </tr></thead>
+      <tbody>
+        {% for inv in invoices %}
+        <tr>
+          <td class="mono fw-bold">{{ inv.invoice_number }}</td>
+          <td><a href="{{ url_for('customer_detail', cid=inv.customer_id) }}">{{ inv.customer_name }}</a></td>
+          <td class="mono text-muted">{{ inv.date }}</td>
+          <td class="mono">{{ inv.total_amount | fmt_number }} {{ inv.currency | currency_symbol }}</td>
+          <td class="mono text-success">{{ inv.paid_amount | fmt_number }}</td>
+          <td class="mono fw-bold {% if inv.remaining > 0 %}text-danger{% endif %}">{{ inv.remaining | fmt_number }}</td>
+          <td><span class="badge badge-{{ inv.status }}">{{ inv.status | status_label }}</span></td>
+          <td><a href="{{ url_for('invoice_detail', inv_id=inv.id) }}" class="btn btn-outline btn-sm">{{ t.btn.view }}</a></td>
+        </tr>
+        {% else %}
+        <tr><td colspan="8">
+          <div class="empty">
+            <div class="empty-icon">🧾</div>
+            <p>{% if search or status %}{{ t.invoices.empty_search }}{% else %}{{ t.invoices.empty }}{% endif %}</p>
+            {% if not search and not status %}
+            <a href="{{ url_for('invoice_new') }}" class="btn btn-primary mt-2">{{ t.invoices.btn_add_first }}</a>
+            {% endif %}
+          </div>
+        </td></tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+{% endblock %}

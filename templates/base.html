@@ -1,0 +1,120 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>{% block title %}{{ t.app.name }}{% endblock %}</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+</head>
+<body>
+
+<!-- SIDEBAR -->
+<aside class="sidebar">
+  <div class="sidebar-brand">
+    <h1>{{ t.app.name }}</h1>
+    <span>{{ t.app.subtitle }}</span>
+  </div>
+
+  <nav class="sidebar-nav">
+    <a class="nav-item" href="{{ url_for('dashboard') }}" data-page="">
+      <span class="icon">📊</span>
+      <span>{{ t.nav.dashboard }}</span>
+    </a>
+    <a class="nav-item" href="{{ url_for('customers_list') }}" data-page="customers">
+      <span class="icon">👤</span>
+      <span>{{ t.nav.customers }}</span>
+    </a>
+    <a class="nav-item" href="{{ url_for('invoices_list') }}" data-page="invoices">
+      <span class="icon">🧾</span>
+      <span>{{ t.nav.invoices }}</span>
+    </a>
+  </nav>
+
+  <div class="sidebar-footer">
+    <!-- Theme toggle — top left corner of the UI -->
+    <button class="theme-toggle" id="theme-toggle-btn" type="button"
+            data-label-dark="{{ t.theme.to_dark }}"
+            data-label-light="{{ t.theme.to_light }}">
+      <span class="theme-icon" id="theme-icon">🌙</span>
+      <span id="theme-label">{{ t.theme.to_dark }}</span>
+    </button>
+
+    <form action="{{ url_for('manual_backup') }}" method="post">
+      <button type="submit" class="btn btn-outline" style="width:100%;justify-content:center;font-size:12px;padding:7px 10px">
+        {{ t.btn.backup }}
+      </button>
+    </form>
+  </div>
+</aside>
+
+<!-- MAIN -->
+<div class="main">
+  <div class="topbar">
+    <div class="topbar-title">{% block page_title %}{% endblock %}</div>
+    <div class="topbar-actions">{% block topbar_actions %}{% endblock %}</div>
+  </div>
+
+  <div class="content">
+    {% with messages = get_flashed_messages(with_categories=true) %}
+      {% if messages %}
+        <div class="flashes">
+          {% for category, message in messages %}
+            <div class="flash {{ category }}">{{ message }}</div>
+          {% endfor %}
+        </div>
+      {% endif %}
+    {% endwith %}
+
+    {% block content %}{% endblock %}
+  </div>
+</div>
+
+<!-- NEW CUSTOMER MODAL (rendered on every page, only shown on invoice form) -->
+<div class="modal-overlay" id="new-customer-modal">
+  <div class="modal">
+    <div class="modal-header">
+      <div>
+        <h3>{{ t.modal.title }}</h3>
+        <p>{{ t.modal.subtitle }}</p>
+      </div>
+      <button class="modal-close" id="modal-close-btn" type="button">&times;</button>
+    </div>
+    <div class="modal-body">
+      <div class="modal-error" id="modal-error"></div>
+      <div class="form-grid">
+        <div class="form-group full">
+          <label>{{ t.customers.label_name }} <span class="req">*</span></label>
+          <input type="text" id="modal-customer-name" placeholder="{{ t.customers.placeholder_name }}">
+        </div>
+        <div class="form-group">
+          <label>{{ t.customers.label_phone }}</label>
+          <input type="text" id="modal-customer-phone" placeholder="{{ t.customers.placeholder_phone }}">
+        </div>
+        <div class="form-group">
+          <label>{{ t.customers.label_address }}</label>
+          <input type="text" id="modal-customer-address" placeholder="{{ t.customers.placeholder_address }}">
+        </div>
+        <div class="form-group full">
+          <label>{{ t.customers.label_notes }}</label>
+          <textarea id="modal-customer-notes" placeholder="{{ t.customers.placeholder_notes }}"></textarea>
+        </div>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button type="button" class="btn btn-outline" id="modal-cancel-btn">{{ t.modal.btn_cancel }}</button>
+      <button type="button" class="btn btn-primary" id="modal-save-btn"
+              data-label="{{ t.modal.btn_save }}"
+              data-err-name="{{ t.modal.err_name_required }}">
+        {{ t.modal.btn_save }}
+      </button>
+    </div>
+  </div>
+</div>
+
+<!-- Hidden placeholder carrier for JS -->
+<span id="item-desc-placeholder" data-ph="{{ t.invoices.item_placeholder_desc }}" style="display:none"></span>
+
+<script src="{{ url_for('static', filename='js/app.js') }}"></script>
+{% block scripts %}{% endblock %}
+</body>
+</html>

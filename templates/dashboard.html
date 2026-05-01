@@ -1,0 +1,117 @@
+{% extends "base.html" %}
+{% block title %}{{ t.dashboard.title }}{% endblock %}
+{% block page_title %}{{ t.dashboard.title }}{% endblock %}
+
+{% block content %}
+
+<!-- Debt by currency -->
+<div class="debt-grid">
+  {% if stats.debt_by_currency %}
+    {% for row in stats.debt_by_currency %}
+    <div class="debt-tile">
+      <div class="currency">
+        {% if row.currency == 'USD' %}{{ t.currency.USD_short }}
+        {% elif row.currency == 'SYP_NEW' %}{{ t.currency.SYP_NEW_short }}
+        {% else %}{{ t.currency.SYP_OLD_short }}{% endif %}
+      </div>
+      <div class="amount">{{ row.remaining | fmt_number }}
+        {% if row.currency == 'USD' %}{{ t.currency.USD_symbol }}
+        {% elif row.currency == 'SYP_NEW' %}{{ t.currency.SYP_NEW_symbol }}
+        {% else %}{{ t.currency.SYP_OLD_symbol }}{% endif %}
+      </div>
+    </div>
+    {% endfor %}
+  {% else %}
+  <div class="debt-tile">
+    <div class="currency">{{ t.dashboard.debt_title }}</div>
+    <div class="amount" style="font-size:18px">{{ t.dashboard.no_debt }}</div>
+  </div>
+  {% endif %}
+</div>
+
+<!-- Stats -->
+<div class="stats-grid">
+  <div class="stat-tile">
+    <div class="label">{{ t.dashboard.stat_customers }}</div>
+    <div class="value blue">{{ stats.total_customers }}</div>
+  </div>
+  <div class="stat-tile">
+    <div class="label">{{ t.dashboard.stat_invoices }}</div>
+    <div class="value">{{ stats.total_invoices }}</div>
+  </div>
+  <div class="stat-tile">
+    <div class="label">{{ t.dashboard.stat_unpaid }}</div>
+    <div class="value red">{{ stats.unpaid_count }}</div>
+  </div>
+  <div class="stat-tile">
+    <div class="label">{{ t.dashboard.stat_partial }}</div>
+    <div class="value gold">{{ stats.partial_count }}</div>
+  </div>
+  <div class="stat-tile">
+    <div class="label">{{ t.dashboard.stat_paid }}</div>
+    <div class="value green">{{ stats.paid_count }}</div>
+  </div>
+</div>
+
+<div style="display:grid;grid-template-columns:1fr 1fr;gap:20px">
+
+  <!-- Recent invoices -->
+  <div class="card">
+    <div class="card-header">
+      <h2>{{ t.dashboard.recent_invoices }}</h2>
+      <a href="{{ url_for('invoices_list') }}" class="btn btn-outline btn-sm">{{ t.dashboard.view_all }}</a>
+    </div>
+    <div class="table-wrap">
+      <table>
+        <thead><tr>
+          <th>{{ t.invoices.col_number }}</th>
+          <th>{{ t.invoices.col_customer }}</th>
+          <th>{{ t.invoices.col_remaining }}</th>
+          <th>{{ t.invoices.col_status }}</th>
+        </tr></thead>
+        <tbody>
+          {% for inv in recent_invoices %}
+          <tr>
+            <td><a href="{{ url_for('invoice_detail', inv_id=inv.id) }}" class="mono fw-bold">{{ inv.invoice_number }}</a></td>
+            <td>{{ inv.customer_name }}</td>
+            <td class="mono">{{ inv.remaining | fmt_number }} {{ inv.currency | currency_symbol }}</td>
+            <td><span class="badge badge-{{ inv.status }}">{{ inv.status | status_label }}</span></td>
+          </tr>
+          {% else %}
+          <tr><td colspan="4" class="text-muted" style="text-align:center;padding:24px">{{ t.dashboard.no_invoices_yet }}</td></tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- Customers with debt -->
+  <div class="card">
+    <div class="card-header">
+      <h2>{{ t.dashboard.customers_debt }}</h2>
+      <a href="{{ url_for('customers_list') }}" class="btn btn-outline btn-sm">{{ t.dashboard.view_all }}</a>
+    </div>
+    <div class="table-wrap">
+      <table>
+        <thead><tr>
+          <th>{{ t.customers.col_name }}</th>
+          <th>{{ t.customers.col_phone }}</th>
+          <th>{{ t.customers.col_remaining }}</th>
+        </tr></thead>
+        <tbody>
+          {% for c in customers_debt %}
+          <tr>
+            <td><a href="{{ url_for('customer_detail', cid=c.id) }}">{{ c.name }}</a></td>
+            <td class="text-muted mono">{{ c.phone or '—' }}</td>
+            <td class="mono fw-bold">{{ c.total_remaining | fmt_number }} {{ c.currency | currency_symbol }}</td>
+          </tr>
+          {% else %}
+          <tr><td colspan="3" class="text-muted" style="text-align:center;padding:24px">{{ t.dashboard.no_debt_customers }}</td></tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+</div>
+{% endblock %}

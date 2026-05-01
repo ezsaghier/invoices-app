@@ -1,0 +1,9 @@
+invoices.db
+backups/
+__pycache__/
+*.pyc
+*.pyo
+.DS_Store
+dist/
+build/
+*.spec

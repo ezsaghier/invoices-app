@@ -1,0 +1,46 @@
+{% extends "base.html" %}
+{% block title %}{{ title }}{% endblock %}
+{% block page_title %}{{ title }}{% endblock %}
+{% block topbar_actions %}
+  <a href="{{ url_for('customers_list') }}" class="btn btn-outline">{{ t.btn.back_customers }}</a>
+{% endblock %}
+
+{% block content %}
+<div class="card" style="max-width:620px">
+  <div class="card-body">
+    <form method="post">
+      <div class="form-grid">
+        <div class="form-group full">
+          <label>{{ t.customers.label_name }} <span class="req">*</span></label>
+          <input type="text" name="name"
+                 value="{{ customer.name if customer else '' }}"
+                 placeholder="{{ t.customers.placeholder_name }}"
+                 required autofocus>
+        </div>
+        <div class="form-group">
+          <label>{{ t.customers.label_phone }}</label>
+          <input type="text" name="phone"
+                 value="{{ customer.phone if customer else '' }}"
+                 placeholder="{{ t.customers.placeholder_phone }}">
+        </div>
+        <div class="form-group">
+          <label>{{ t.customers.label_address }}</label>
+          <input type="text" name="address"
+                 value="{{ customer.address if customer else '' }}"
+                 placeholder="{{ t.customers.placeholder_address }}">
+        </div>
+        <div class="form-group full">
+          <label>{{ t.customers.label_notes }}</label>
+          <textarea name="notes" placeholder="{{ t.customers.placeholder_notes }}">{{ customer.notes if customer else '' }}</textarea>
+        </div>
+      </div>
+      <div class="d-flex gap-2 mt-2">
+        <button type="submit" class="btn btn-primary">
+          {{ t.customers.btn_save_edit if customer else t.customers.btn_save_new }}
+        </button>
+        <a href="{{ url_for('customers_list') }}" class="btn btn-outline">{{ t.btn.cancel }}</a>
+      </div>
+    </form>
+  </div>
+</div>
+{% endblock %}
