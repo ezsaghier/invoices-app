@@ -8,7 +8,7 @@ $ErrorActionPreference = "Stop"
 
 # ── Config ──────────────────────────────────────────────────────
 $APP_DIR     = "D:\InvoicesApp"
-$REPO_URL    = "https://github.com/ezsaghier/invoices-app.git"
+$REPO_URL    = "https://github.com/YOUR_USERNAME/invoices-app.git"
 $LOG_FILE    = "$APP_DIR\install_log.txt"
 $PYTHON_URL  = "https://www.python.org/ftp/python/3.11.9/python-3.11.9-amd64.exe"
 $GIT_URL     = "https://github.com/git-for-windows/git/releases/download/v2.44.0.windows.1/Git-2.44.0-64-bit.exe"
@@ -248,29 +248,27 @@ Title "Step 5 of 5 — Creating Desktop Shortcut"
 
 # run.bat
 $runBat = "$APP_DIR\run.bat"
-@"
-@echo off
-cd /d D:\InvoicesApp
-echo Starting Invoice System...
-python app.py
-pause
-"@ | Set-Content -Path $runBat -Encoding ASCII
+$runContent = "@echo off" + "`r`n"
+$runContent += "cd /d D:\InvoicesApp" + "`r`n"
+$runContent += "echo Starting Invoice System..." + "`r`n"
+$runContent += "python app.py" + "`r`n"
+$runContent += "pause" + "`r`n"
+[System.IO.File]::WriteAllText($runBat, $runContent)
 OK "Created run.bat"
 
 # update.bat
 $updateBat = "$APP_DIR\update.bat"
-@"
-@echo off
-echo Stopping app if running...
-taskkill /f /im python.exe >nul 2>&1
-cd /d D:\InvoicesApp
-echo Downloading latest updates...
-git pull
-echo.
-echo Update complete. Starting app...
-python app.py
-pause
-"@ | Set-Content -Path $updateBat -Encoding ASCII
+$updateContent = "@echo off" + "`r`n"
+$updateContent += "echo Stopping app if running..." + "`r`n"
+$updateContent += "taskkill /f /im python.exe >nul 2>&1" + "`r`n"
+$updateContent += "cd /d D:\InvoicesApp" + "`r`n"
+$updateContent += "echo Downloading latest updates..." + "`r`n"
+$updateContent += "git pull" + "`r`n"
+$updateContent += "echo." + "`r`n"
+$updateContent += "echo Update complete. Starting app..." + "`r`n"
+$updateContent += "python app.py" + "`r`n"
+$updateContent += "pause" + "`r`n"
+[System.IO.File]::WriteAllText($updateBat, $updateContent)
 OK "Created update.bat"
 
 # Desktop shortcut for run.bat
