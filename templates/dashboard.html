@@ -51,6 +51,15 @@
     <div class="label">{{ t.dashboard.stat_paid }}</div>
     <div class="value green">{{ stats.paid_count }}</div>
   </div>
+  <div class="stat-tile">
+    <div class="label">{{ t.messages.backup_last }}</div>
+    {% if last_backup.exists %}
+      <div class="value green" style="font-size:14px;font-weight:700">{{ last_backup.time }}</div>
+      <div class="text-muted" style="font-size:11px;margin-top:4px">{{ last_backup.count }} {{ t.messages.backup_count }}</div>
+    {% else %}
+      <div class="value red" style="font-size:14px">{{ t.messages.backup_never }}</div>
+    {% endif %}
+  </div>
 </div>
 
 <div style="display:grid;grid-template-columns:1fr 1fr;gap:20px">

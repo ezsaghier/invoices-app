@@ -171,7 +171,11 @@
     "invoice_created": "تم إنشاء الفاتورة بنجاح",
     "payment_added": "تم تسجيل الدفعة بنجاح",
     "backup_done": "تم النسخ الاحتياطي بنجاح",
+    "backup_cancelled": "تم إلغاء النسخ الاحتياطي",
     "backup_failed": "فشل النسخ الاحتياطي",
+    "backup_last": "آخر نسخة احتياطية",
+    "backup_never": "لم يتم نسخ احتياطي بعد",
+    "backup_count": "نسخة محفوظة",
     "customer_not_found": "الزبون غير موجود",
     "invoice_not_found": "الفاتورة غير موجودة"
   },

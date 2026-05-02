@@ -60,9 +60,11 @@ def dashboard():
     stats           = db.get_dashboard_stats()
     recent_invoices = db.get_recent_invoices(10)
     customers_debt  = db.get_customers_with_debt()
+    last_backup     = backup.get_last_backup_info()
     return render_template('dashboard.html', stats=stats,
                            recent_invoices=recent_invoices,
-                           customers_debt=customers_debt)
+                           customers_debt=customers_debt,
+                           last_backup=last_backup)
 
 # ─────────────────────────────────────────────────────────────────
 # CUSTOMERS
@@ -270,9 +272,12 @@ def api_autocomplete_customers():
 
 @app.route('/backup', methods=['POST'])
 def manual_backup():
-    path = backup.do_backup()
-    flash(LANG['messages']['backup_done'] if path else LANG['messages']['backup_failed'],
-          'success' if path else 'error')
+    path = backup.do_manual_backup()
+    if path:
+        filename = os.path.basename(path)
+        flash(f"{LANG['messages']['backup_done']}: {filename}", 'success')
+    else:
+        flash(LANG['messages']['backup_failed'], 'error')
     return redirect(request.referrer or url_for('dashboard'))
 
 # ─────────────────────────────────────────────────────────────────
