@@ -1,22 +1,19 @@
 # ================================================================
 #  Invoice App Installer - PowerShell Script
-#  Works fully offline if Python installer is on the USB
-#  Logs everything to install_log.txt
+#  Downloads app as ZIP from GitHub - no Git required
+#  Logs everything to install_log.txt (same folder as this script)
 # ================================================================
 
-$ErrorActionPreference = "Stop"
-
 # -- Config ------------------------------------------------------
-$APP_DIR     = "D:\InvoicesApp"
-$REPO_URL    = "https://github.com/ezsaghier/invoices-app.git"
-$SCRIPT_DIR  = Split-Path -Parent $MyInvocation.MyCommand.Path
-$LOG_FILE    = "$SCRIPT_DIR\install_log.txt"
-$PYTHON_URL  = "https://www.python.org/ftp/python/3.11.9/python-3.11.9-amd64.exe"
-$GIT_URL     = "https://github.com/git-for-windows/git/releases/download/v2.44.0.windows.1/Git-2.44.0-64-bit.exe"
-$PYTHON_INSTALLER = "$env:TEMP\python_installer.exe"
-$GIT_INSTALLER    = "$env:TEMP\git_installer.exe"
+$APP_DIR    = "D:\InvoicesApp"
+$GITHUB_ZIP = "https://github.com/ezsaghier/invoices-app/archive/refs/heads/main.zip"
+$PYTHON_URL = "https://www.python.org/ftp/python/3.11.9/python-3.11.9-amd64.exe"
+$SCRIPT_DIR = Split-Path -Parent $MyInvocation.MyCommand.Path
+$LOG_FILE   = "$SCRIPT_DIR\install_log.txt"
+$ZIP_DEST   = "$env:TEMP\invoices_app.zip"
+$EXTRACT_TO = "$env:TEMP\invoices_extract"
 
-# -- Helpers ------------------------------------------------------
+# -- Helpers -----------------------------------------------------
 
 function Log($msg) {
     $timestamp = Get-Date -Format "yyyy-MM-dd HH:mm:ss"
@@ -41,281 +38,207 @@ function INFO($msg) {
     Log "INFO: $msg"
 }
 
-function ERR($msg) {
+function FAIL($msg) {
     Write-Host ""
-    Write-Host "  ERR  ERROR: $msg" -ForegroundColor Red
+    Write-Host "  FAILED: $msg" -ForegroundColor Red
     Write-Host ""
-    Write-Host "  The installation log is saved at:" -ForegroundColor White
-    Write-Host "  $LOG_FILE" -ForegroundColor White
-    Write-Host ""
+    Write-Host "  Log saved at: $LOG_FILE" -ForegroundColor White
     Write-Host "  Please send this file to your support contact." -ForegroundColor White
-    Log "ERROR: $msg"
+    Log "FAILED: $msg"
+    Read-Host "  Press Enter to exit"
+    exit 1
 }
 
-function Download($url, $dest, $label) {
-    INFO "Downloading $label ..."
-    try {
-        $wc = New-Object System.Net.WebClient
-        $wc.DownloadFile($url, $dest)
-        OK "Downloaded $label"
-        Log "Downloaded: $url -> $dest"
-    } catch {
-        throw "Failed to download $label : $_"
-    }
-}
-
-function Check-Command($cmd) {
-    return [bool](Get-Command $cmd -ErrorAction SilentlyContinue)
-}
-
-# -- Start --------------------------------------------------------
+# -- Start -------------------------------------------------------
 
 Clear-Host
 Write-Host ""
 Write-Host "  +----------------------------------------------+" -ForegroundColor Cyan
 Write-Host "  |     Invoice Management System - Installer    |" -ForegroundColor Cyan
-Write-Host "  |     Invoice Management System Installer      |" -ForegroundColor Cyan
 Write-Host "  +----------------------------------------------+" -ForegroundColor Cyan
 Write-Host ""
 
-# Create app directory and start log
-if (-not (Test-Path $APP_DIR)) {
-    New-Item -ItemType Directory -Path $APP_DIR -Force | Out-Null
-}
+# Start log
 "" | Set-Content -Path $LOG_FILE -Encoding UTF8
 Log "Installation started"
-Log "Windows version: $([System.Environment]::OSVersion.VersionString)"
+Log "Windows: $([System.Environment]::OSVersion.VersionString)"
 Log "Machine: $env:COMPUTERNAME"
 Log "User: $env:USERNAME"
-Log "App directory: $APP_DIR"
+Log "App dir: $APP_DIR"
 
-# -- Step 1: Check / Install Python -------------------------------
+# -- Step 1: Python ----------------------------------------------
 
-Title "Step 1 of 5 - Python"
+Title "Step 1 of 4 - Python"
 
 $pythonOK = $false
 try {
-    $pyVersion = & python --version 2>&1
-    if ($pyVersion -match "Python 3\.(\d+)") {
-        $minor = [int]$Matches[1]
-        if ($minor -ge 9) {
-            OK "Python already installed: $pyVersion"
-            Log "Python found: $pyVersion"
+    $pyVer = & python --version 2>&1
+    if ($pyVer -match "Python 3\.(\d+)") {
+        if ([int]$Matches[1] -ge 9) {
+            OK "Python already installed: $pyVer"
+            Log "Python found: $pyVer"
             $pythonOK = $true
-        } else {
-            INFO "Python version too old ($pyVersion) - installing newer version"
         }
     }
-} catch {
-    INFO "Python not found - will install"
-}
+} catch { }
 
 if (-not $pythonOK) {
-    # Check if installer is on USB (same folder as this script)
-    $scriptDir = Split-Path -Parent $MyInvocation.MyCommand.Path
-    $localInstaller = Get-ChildItem -Path $scriptDir -Filter "python-*.exe" | Select-Object -First 1
+    # Check for local installer in same folder as this script
+    $localPy = Get-ChildItem -Path $SCRIPT_DIR -Filter "python-*.exe" -ErrorAction SilentlyContinue |
+               Select-Object -First 1
 
-    if ($localInstaller) {
-        INFO "Found Python installer on USB: $($localInstaller.Name)"
-        $PYTHON_INSTALLER = $localInstaller.FullName
+    $pyInstaller = if ($localPy) {
+        INFO "Found Python installer: $($localPy.Name)"
+        $localPy.FullName
     } else {
-        Download $PYTHON_URL $PYTHON_INSTALLER "Python 3.11"
+        INFO "Downloading Python 3.11..."
+        $dest = "$env:TEMP\python_installer.exe"
+        try {
+            (New-Object System.Net.WebClient).DownloadFile($PYTHON_URL, $dest)
+            Log "Downloaded Python: $PYTHON_URL"
+        } catch {
+            FAIL "Could not download Python: $_"
+        }
+        $dest
     }
 
-    INFO "Installing Python (this may take a minute)..."
-    $args = "/quiet InstallAllUsers=0 PrependPath=1 Include_pip=1"
-    $proc = Start-Process -FilePath $PYTHON_INSTALLER -ArgumentList $args -Wait -PassThru
-    if ($proc.ExitCode -ne 0) {
-        ERR "Python installation failed (exit code $($proc.ExitCode))"
-        Read-Host "Press Enter to exit"
-        exit 1
-    }
+    INFO "Installing Python..."
+    $proc = Start-Process -FilePath $pyInstaller `
+            -ArgumentList "/quiet InstallAllUsers=0 PrependPath=1 Include_pip=1" `
+            -Wait -PassThru
+    if ($proc.ExitCode -ne 0) { FAIL "Python install failed (code $($proc.ExitCode))" }
 
-    # Refresh PATH
     $env:Path = [System.Environment]::GetEnvironmentVariable("Path","Machine") + ";" +
                 [System.Environment]::GetEnvironmentVariable("Path","User")
-
-    OK "Python installed successfully"
+    OK "Python installed"
     Log "Python installed"
 }
 
-# -- Step 2: Check / Install Git ----------------------------------
+# -- Step 2: Flask -----------------------------------------------
 
-Title "Step 2 of 5 - Git"
+Title "Step 2 of 4 - Installing Flask"
 
-$gitOK = Check-Command "git"
-
-if ($gitOK) {
-    $gitVersion = & git --version 2>&1
-    OK "Git already installed: $gitVersion"
-    Log "Git found: $gitVersion"
-} else {
-    INFO "Git not found - will install"
-
-    $scriptDir = Split-Path -Parent $MyInvocation.MyCommand.Path
-    $localGit = Get-ChildItem -Path $scriptDir -Filter "Git-*.exe" | Select-Object -First 1
-
-    if ($localGit) {
-        INFO "Found Git installer on USB: $($localGit.Name)"
-        $GIT_INSTALLER = $localGit.FullName
-    } else {
-        Download $GIT_URL $GIT_INSTALLER "Git"
-    }
-
-    INFO "Installing Git (this may take a minute)..."
-    $args = "/VERYSILENT /NORESTART /NOCANCEL /SP- /CLOSEAPPLICATIONS /RESTARTAPPLICATIONS /COMPONENTS=icons,ext\reg\shellhere,assoc,assoc_sh"
-    $proc = Start-Process -FilePath $GIT_INSTALLER -ArgumentList $args -Wait -PassThru
-    if ($proc.ExitCode -ne 0) {
-        ERR "Git installation failed (exit code $($proc.ExitCode))"
-        Read-Host "Press Enter to exit"
-        exit 1
-    }
-
-    # Refresh PATH
-    $env:Path = [System.Environment]::GetEnvironmentVariable("Path","Machine") + ";" +
-                [System.Environment]::GetEnvironmentVariable("Path","User")
-    $env:Path += ";C:\Program Files\Git\cmd"
-
-    OK "Git installed successfully"
-    Log "Git installed"
-}
-
-# -- Step 3: Clone or Update the app ------------------------------
-
-Title "Step 3 of 5 - Downloading the App"
-
-if (Test-Path "$APP_DIR\.git") {
-    INFO "App already exists - updating to latest version..."
-    Set-Location $APP_DIR
-    try {
-        & git pull 2>&1 | ForEach-Object { Log "git pull: $_" }
-        OK "App updated to latest version"
-    } catch {
-        ERR "Failed to update app: $_"
-        Read-Host "Press Enter to exit"
-        exit 1
-    }
-} else {
-    # Remove folder if it exists but has no .git (failed previous install)
-    if (Test-Path $APP_DIR) {
-        INFO "Removing incomplete previous installation..."
-        Remove-Item -Recurse -Force $APP_DIR
-        Log "Removed incomplete folder: $APP_DIR"
-    }
-
-    New-Item -ItemType Directory -Path $APP_DIR -Force | Out-Null
-    INFO "Downloading app files from GitHub..."
-    try {
-        & git clone $REPO_URL $APP_DIR 2>&1 | ForEach-Object {
-            Log "git clone: $_"
-            Write-Host "  ->  $_" -ForegroundColor DarkGray
-        }
-        OK "App downloaded successfully"
-    } catch {
-        ERR "Failed to download app: $_"
-        Read-Host "Press Enter to exit"
-        exit 1
-    }
-}
-
-# -- Step 4: Install Python packages ------------------------------
-
-Title "Step 4 of 5 - Installing Required Packages"
-
-Set-Location $APP_DIR
-
-# Check if wheels folder exists (offline install from USB)
-$wheelsDir = Join-Path (Split-Path -Parent $MyInvocation.MyCommand.Path) "wheels"
+# Check for offline wheels folder
+$wheelsDir = Join-Path $SCRIPT_DIR "wheels"
 
 if (Test-Path $wheelsDir) {
-    INFO "Installing packages from USB (offline mode)..."
-    try {
-        & python -m pip install --no-index --find-links="$wheelsDir" flask 2>&1 |
-            ForEach-Object { Log "pip: $_" }
-        OK "Packages installed from USB"
-    } catch {
-        ERR "Failed to install packages from USB: $_"
-        Read-Host "Press Enter to exit"
-        exit 1
-    }
+    INFO "Installing Flask from USB (offline)..."
+    $result = & python -m pip install --no-index --find-links="$wheelsDir" flask 2>&1
+    Log "pip (offline): $result"
 } else {
-    INFO "Installing packages from internet..."
-    try {
-        & python -m pip install flask --quiet 2>&1 |
-            ForEach-Object { Log "pip: $_" }
-        OK "Packages installed"
-    } catch {
-        ERR "Failed to install packages: $_"
-        Read-Host "Press Enter to exit"
-        exit 1
-    }
+    INFO "Installing Flask from internet..."
+    $result = & python -m pip install flask --quiet 2>&1
+    Log "pip: $result"
 }
 
-# -- Step 5: Create desktop shortcut ------------------------------
+if ($LASTEXITCODE -ne 0) { FAIL "Flask install failed: $result" }
+OK "Flask installed"
 
-Title "Step 5 of 5 - Creating Desktop Shortcut"
+# -- Step 3: Download App ----------------------------------------
+
+Title "Step 3 of 4 - Downloading the App"
+
+# Clean up previous install if needed
+if (Test-Path $APP_DIR) {
+    INFO "Removing previous installation..."
+    Remove-Item -Recurse -Force $APP_DIR
+    Log "Removed: $APP_DIR"
+}
+
+# Clean up previous temp extract
+if (Test-Path $EXTRACT_TO) {
+    Remove-Item -Recurse -Force $EXTRACT_TO
+}
+
+INFO "Downloading app from GitHub..."
+try {
+    (New-Object System.Net.WebClient).DownloadFile($GITHUB_ZIP, $ZIP_DEST)
+    Log "Downloaded ZIP: $GITHUB_ZIP"
+} catch {
+    FAIL "Could not download app: $_"
+}
+OK "Download complete"
+
+INFO "Extracting files..."
+try {
+    Expand-Archive -Path $ZIP_DEST -DestinationPath $EXTRACT_TO -Force
+    Log "Extracted to: $EXTRACT_TO"
+} catch {
+    FAIL "Could not extract ZIP: $_"
+}
+
+# GitHub ZIP contains a subfolder named "invoices-app-main" - move its contents to APP_DIR
+$extracted = Get-ChildItem -Path $EXTRACT_TO | Select-Object -First 1
+if (-not $extracted) { FAIL "Extracted folder is empty" }
+
+Move-Item -Path $extracted.FullName -Destination $APP_DIR
+Log "Moved app to: $APP_DIR"
+
+# Clean up temp files
+Remove-Item -Force $ZIP_DEST -ErrorAction SilentlyContinue
+Remove-Item -Recurse -Force $EXTRACT_TO -ErrorAction SilentlyContinue
+
+OK "App files installed to $APP_DIR"
+
+# -- Step 4: Shortcuts -------------------------------------------
+
+Title "Step 4 of 4 - Creating Shortcuts"
 
 # run.bat
 $runBat = "$APP_DIR\run.bat"
-$runContent = "@echo off" + "`r`n"
-$runContent += "cd /d D:\InvoicesApp" + "`r`n"
-$runContent += "echo Starting Invoice System..." + "`r`n"
-$runContent += "python app.py" + "`r`n"
-$runContent += "pause" + "`r`n"
-[System.IO.File]::WriteAllText($runBat, $runContent)
+$rc  = "@echo off`r`n"
+$rc += "cd /d D:\InvoicesApp`r`n"
+$rc += "echo Starting Invoice System...`r`n"
+$rc += "python app.py`r`n"
+$rc += "pause`r`n"
+[System.IO.File]::WriteAllText($runBat, $rc)
 OK "Created run.bat"
 
-# update.bat
+# update.bat - downloads fresh ZIP and replaces app files
 $updateBat = "$APP_DIR\update.bat"
-$updateContent = "@echo off" + "`r`n"
-$updateContent += "echo Stopping app if running..." + "`r`n"
-$updateContent += "taskkill /f /im python.exe >nul 2>&1" + "`r`n"
-$updateContent += "cd /d D:\InvoicesApp" + "`r`n"
-$updateContent += "echo Downloading latest updates..." + "`r`n"
-$updateContent += "git pull" + "`r`n"
-$updateContent += "echo." + "`r`n"
-$updateContent += "echo Update complete. Starting app..." + "`r`n"
-$updateContent += "python app.py" + "`r`n"
-$updateContent += "pause" + "`r`n"
-[System.IO.File]::WriteAllText($updateBat, $updateContent)
+$uc  = "@echo off`r`n"
+$uc += "echo Downloading latest update...`r`n"
+$uc += "powershell -NoProfile -ExecutionPolicy Bypass -Command `""
+$uc += "(New-Object System.Net.WebClient).DownloadFile('$GITHUB_ZIP', '%TEMP%\inv_update.zip'); "
+$uc += "Expand-Archive '%TEMP%\inv_update.zip' '%TEMP%\inv_update' -Force; "
+$uc += "`$src = (Get-ChildItem '%TEMP%\inv_update' | Select-Object -First 1).FullName; "
+$uc += "Copy-Item `"`$src\*`" 'D:\InvoicesApp\' -Recurse -Force; "
+$uc += "Remove-Item '%TEMP%\inv_update.zip' -Force; "
+$uc += "Remove-Item '%TEMP%\inv_update' -Recurse -Force`"" + "`r`n"
+$uc += "echo Update complete. Starting app...`r`n"
+$uc += "cd /d D:\InvoicesApp`r`n"
+$uc += "python app.py`r`n"
+$uc += "pause`r`n"
+[System.IO.File]::WriteAllText($updateBat, $uc)
 OK "Created update.bat"
 
-# Desktop shortcut for run.bat
-$desktopPath = [System.Environment]::GetFolderPath("Desktop")
+# Desktop shortcut
+$desktopPath  = [System.Environment]::GetFolderPath("Desktop")
 $shortcutPath = "$desktopPath\InvoiceSystem.lnk"
-
-$shell = New-Object -ComObject WScript.Shell
-$shortcut = $shell.CreateShortcut($shortcutPath)
-$shortcut.TargetPath  = $runBat
+$shell        = New-Object -ComObject WScript.Shell
+$shortcut     = $shell.CreateShortcut($shortcutPath)
+$shortcut.TargetPath       = $runBat
 $shortcut.WorkingDirectory = $APP_DIR
-$shortcut.Description = "Invoice Management System"
-$shortcut.IconLocation = "shell32.dll,13"
+$shortcut.Description      = "Invoice Management System"
+$shortcut.IconLocation     = "shell32.dll,13"
 $shortcut.Save()
-OK "Desktop shortcut created"
-Log "Desktop shortcut created: $shortcutPath"
+OK "Desktop shortcut created: InvoiceSystem"
+Log "Shortcut: $shortcutPath"
 
-# -- Done ---------------------------------------------------------
+# -- Done --------------------------------------------------------
 
 Write-Host ""
 Write-Host "  +----------------------------------------------+" -ForegroundColor Green
 Write-Host "  |        Installation Complete!                |" -ForegroundColor Green
 Write-Host "  +----------------------------------------------+" -ForegroundColor Green
 Write-Host ""
-Write-Host "  The app is installed at: $APP_DIR" -ForegroundColor White
+Write-Host "  App installed at : $APP_DIR" -ForegroundColor White
+Write-Host "  Start the app    : double-click InvoiceSystem on Desktop" -ForegroundColor Yellow
+Write-Host "  Future updates   : double-click update.bat in $APP_DIR" -ForegroundColor Yellow
+Write-Host "  Install log      : $LOG_FILE" -ForegroundColor DarkGray
 Write-Host ""
-Write-Host "  To start the app:" -ForegroundColor White
-Write-Host "  -> Double-click  'InvoiceSystem'  on the Desktop" -ForegroundColor Yellow
-Write-Host ""
-Write-Host "  To update the app in the future:" -ForegroundColor White
-Write-Host "  -> Double-click  update.bat  in $APP_DIR" -ForegroundColor Yellow
-Write-Host ""
-Write-Host "  Installation log saved at:" -ForegroundColor White
-Write-Host "  $LOG_FILE" -ForegroundColor DarkGray
-Write-Host ""
-
 Log "Installation completed successfully"
 
-# Ask to launch now
 $launch = Read-Host "  Launch the app now? (y/n)"
 if ($launch -eq "y" -or $launch -eq "Y" -or $launch -eq "") {
     Log "Launching app..."
