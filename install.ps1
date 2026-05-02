@@ -9,7 +9,8 @@ $ErrorActionPreference = "Stop"
 # -- Config ------------------------------------------------------
 $APP_DIR     = "D:\InvoicesApp"
 $REPO_URL    = "https://github.com/ezsaghier/invoices-app.git"
-$LOG_FILE    = "$APP_DIR\install_log.txt"
+$SCRIPT_DIR  = Split-Path -Parent $MyInvocation.MyCommand.Path
+$LOG_FILE    = "$SCRIPT_DIR\install_log.txt"
 $PYTHON_URL  = "https://www.python.org/ftp/python/3.11.9/python-3.11.9-amd64.exe"
 $GIT_URL     = "https://github.com/git-for-windows/git/releases/download/v2.44.0.windows.1/Git-2.44.0-64-bit.exe"
 $PYTHON_INSTALLER = "$env:TEMP\python_installer.exe"
