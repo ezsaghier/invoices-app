@@ -8,7 +8,7 @@ $ErrorActionPreference = "Stop"
 
 # -- Config ------------------------------------------------------
 $APP_DIR     = "D:\InvoicesApp"
-$REPO_URL    = "https://github.com/YOUR_USERNAME/invoices-app.git"
+$REPO_URL    = "https://github.com/ezsaghier/invoices-app.git"
 $LOG_FILE    = "$APP_DIR\install_log.txt"
 $PYTHON_URL  = "https://www.python.org/ftp/python/3.11.9/python-3.11.9-amd64.exe"
 $GIT_URL     = "https://github.com/git-for-windows/git/releases/download/v2.44.0.windows.1/Git-2.44.0-64-bit.exe"
@@ -195,6 +195,14 @@ if (Test-Path "$APP_DIR\.git") {
         exit 1
     }
 } else {
+    # Remove folder if it exists but has no .git (failed previous install)
+    if (Test-Path $APP_DIR) {
+        INFO "Removing incomplete previous installation..."
+        Remove-Item -Recurse -Force $APP_DIR
+        Log "Removed incomplete folder: $APP_DIR"
+    }
+
+    New-Item -ItemType Directory -Path $APP_DIR -Force | Out-Null
     INFO "Downloading app files from GitHub..."
     try {
         & git clone $REPO_URL $APP_DIR 2>&1 | ForEach-Object {
