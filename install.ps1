@@ -8,7 +8,7 @@ $ErrorActionPreference = "Stop"
 
 # -- Config ------------------------------------------------------
 $APP_DIR     = "D:\InvoicesApp"
-$REPO_URL    = "https://github.com/ezsaghier/invoices-app.git"
+$REPO_URL    = "https://github.com/YOUR_USERNAME/invoices-app.git"
 $LOG_FILE    = "$APP_DIR\install_log.txt"
 $PYTHON_URL  = "https://www.python.org/ftp/python/3.11.9/python-3.11.9-amd64.exe"
 $GIT_URL     = "https://github.com/git-for-windows/git/releases/download/v2.44.0.windows.1/Git-2.44.0-64-bit.exe"
@@ -72,7 +72,7 @@ function Check-Command($cmd) {
 Clear-Host
 Write-Host ""
 Write-Host "  +----------------------------------------------+" -ForegroundColor Cyan
-Write-Host "  |     نظام إدارة الفواتير - المثبت            |" -ForegroundColor Cyan
+Write-Host "  |     Invoice Management System - Installer    |" -ForegroundColor Cyan
 Write-Host "  |     Invoice Management System Installer      |" -ForegroundColor Cyan
 Write-Host "  +----------------------------------------------+" -ForegroundColor Cyan
 Write-Host ""
