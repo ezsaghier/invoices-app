@@ -1,21 +1,21 @@
 # ================================================================
-#  Invoice App Installer — PowerShell Script
+#  Invoice App Installer - PowerShell Script
 #  Works fully offline if Python installer is on the USB
 #  Logs everything to install_log.txt
 # ================================================================
 
 $ErrorActionPreference = "Stop"
 
-# ── Config ──────────────────────────────────────────────────────
+# -- Config ------------------------------------------------------
 $APP_DIR     = "D:\InvoicesApp"
-$REPO_URL    = "https://github.com/YOUR_USERNAME/invoices-app.git"
+$REPO_URL    = "https://github.com/ezsaghier/invoices-app.git"
 $LOG_FILE    = "$APP_DIR\install_log.txt"
 $PYTHON_URL  = "https://www.python.org/ftp/python/3.11.9/python-3.11.9-amd64.exe"
 $GIT_URL     = "https://github.com/git-for-windows/git/releases/download/v2.44.0.windows.1/Git-2.44.0-64-bit.exe"
 $PYTHON_INSTALLER = "$env:TEMP\python_installer.exe"
 $GIT_INSTALLER    = "$env:TEMP\git_installer.exe"
 
-# ── Helpers ──────────────────────────────────────────────────────
+# -- Helpers ------------------------------------------------------
 
 function Log($msg) {
     $timestamp = Get-Date -Format "yyyy-MM-dd HH:mm:ss"
@@ -26,23 +26,23 @@ function Log($msg) {
 function Title($msg) {
     Write-Host ""
     Write-Host "  $msg" -ForegroundColor Cyan
-    Write-Host ("  " + "─" * ($msg.Length)) -ForegroundColor DarkGray
+    Write-Host ("  " + "-" * ($msg.Length)) -ForegroundColor DarkGray
     Log "=== $msg ==="
 }
 
 function OK($msg) {
-    Write-Host "  ✓  $msg" -ForegroundColor Green
+    Write-Host "  OK  $msg" -ForegroundColor Green
     Log "OK: $msg"
 }
 
 function INFO($msg) {
-    Write-Host "  →  $msg" -ForegroundColor Yellow
+    Write-Host "  ->  $msg" -ForegroundColor Yellow
     Log "INFO: $msg"
 }
 
 function ERR($msg) {
     Write-Host ""
-    Write-Host "  ✗  ERROR: $msg" -ForegroundColor Red
+    Write-Host "  ERR  ERROR: $msg" -ForegroundColor Red
     Write-Host ""
     Write-Host "  The installation log is saved at:" -ForegroundColor White
     Write-Host "  $LOG_FILE" -ForegroundColor White
@@ -67,14 +67,14 @@ function Check-Command($cmd) {
     return [bool](Get-Command $cmd -ErrorAction SilentlyContinue)
 }
 
-# ── Start ────────────────────────────────────────────────────────
+# -- Start --------------------------------------------------------
 
 Clear-Host
 Write-Host ""
-Write-Host "  ╔══════════════════════════════════════════════╗" -ForegroundColor Cyan
-Write-Host "  ║     نظام إدارة الفواتير — المثبّت           ║" -ForegroundColor Cyan
-Write-Host "  ║     Invoice Management System Installer      ║" -ForegroundColor Cyan
-Write-Host "  ╚══════════════════════════════════════════════╝" -ForegroundColor Cyan
+Write-Host "  +----------------------------------------------+" -ForegroundColor Cyan
+Write-Host "  |     نظام إدارة الفواتير - المثبت            |" -ForegroundColor Cyan
+Write-Host "  |     Invoice Management System Installer      |" -ForegroundColor Cyan
+Write-Host "  +----------------------------------------------+" -ForegroundColor Cyan
 Write-Host ""
 
 # Create app directory and start log
@@ -88,9 +88,9 @@ Log "Machine: $env:COMPUTERNAME"
 Log "User: $env:USERNAME"
 Log "App directory: $APP_DIR"
 
-# ── Step 1: Check / Install Python ───────────────────────────────
+# -- Step 1: Check / Install Python -------------------------------
 
-Title "Step 1 of 5 — Python"
+Title "Step 1 of 5 - Python"
 
 $pythonOK = $false
 try {
@@ -102,11 +102,11 @@ try {
             Log "Python found: $pyVersion"
             $pythonOK = $true
         } else {
-            INFO "Python version too old ($pyVersion) — installing newer version"
+            INFO "Python version too old ($pyVersion) - installing newer version"
         }
     }
 } catch {
-    INFO "Python not found — will install"
+    INFO "Python not found - will install"
 }
 
 if (-not $pythonOK) {
@@ -138,9 +138,9 @@ if (-not $pythonOK) {
     Log "Python installed"
 }
 
-# ── Step 2: Check / Install Git ──────────────────────────────────
+# -- Step 2: Check / Install Git ----------------------------------
 
-Title "Step 2 of 5 — Git"
+Title "Step 2 of 5 - Git"
 
 $gitOK = Check-Command "git"
 
@@ -149,7 +149,7 @@ if ($gitOK) {
     OK "Git already installed: $gitVersion"
     Log "Git found: $gitVersion"
 } else {
-    INFO "Git not found — will install"
+    INFO "Git not found - will install"
 
     $scriptDir = Split-Path -Parent $MyInvocation.MyCommand.Path
     $localGit = Get-ChildItem -Path $scriptDir -Filter "Git-*.exe" | Select-Object -First 1
@@ -179,12 +179,12 @@ if ($gitOK) {
     Log "Git installed"
 }
 
-# ── Step 3: Clone or Update the app ──────────────────────────────
+# -- Step 3: Clone or Update the app ------------------------------
 
-Title "Step 3 of 5 — Downloading the App"
+Title "Step 3 of 5 - Downloading the App"
 
 if (Test-Path "$APP_DIR\.git") {
-    INFO "App already exists — updating to latest version..."
+    INFO "App already exists - updating to latest version..."
     Set-Location $APP_DIR
     try {
         & git pull 2>&1 | ForEach-Object { Log "git pull: $_" }
@@ -199,7 +199,7 @@ if (Test-Path "$APP_DIR\.git") {
     try {
         & git clone $REPO_URL $APP_DIR 2>&1 | ForEach-Object {
             Log "git clone: $_"
-            Write-Host "  →  $_" -ForegroundColor DarkGray
+            Write-Host "  ->  $_" -ForegroundColor DarkGray
         }
         OK "App downloaded successfully"
     } catch {
@@ -209,9 +209,9 @@ if (Test-Path "$APP_DIR\.git") {
     }
 }
 
-# ── Step 4: Install Python packages ──────────────────────────────
+# -- Step 4: Install Python packages ------------------------------
 
-Title "Step 4 of 5 — Installing Required Packages"
+Title "Step 4 of 5 - Installing Required Packages"
 
 Set-Location $APP_DIR
 
@@ -242,9 +242,9 @@ if (Test-Path $wheelsDir) {
     }
 }
 
-# ── Step 5: Create desktop shortcut ──────────────────────────────
+# -- Step 5: Create desktop shortcut ------------------------------
 
-Title "Step 5 of 5 — Creating Desktop Shortcut"
+Title "Step 5 of 5 - Creating Desktop Shortcut"
 
 # run.bat
 $runBat = "$APP_DIR\run.bat"
@@ -273,7 +273,7 @@ OK "Created update.bat"
 
 # Desktop shortcut for run.bat
 $desktopPath = [System.Environment]::GetFolderPath("Desktop")
-$shortcutPath = "$desktopPath\نظام الفواتير.lnk"
+$shortcutPath = "$desktopPath\InvoiceSystem.lnk"
 
 $shell = New-Object -ComObject WScript.Shell
 $shortcut = $shell.CreateShortcut($shortcutPath)
@@ -285,20 +285,20 @@ $shortcut.Save()
 OK "Desktop shortcut created"
 Log "Desktop shortcut created: $shortcutPath"
 
-# ── Done ─────────────────────────────────────────────────────────
+# -- Done ---------------------------------------------------------
 
 Write-Host ""
-Write-Host "  ╔══════════════════════════════════════════════╗" -ForegroundColor Green
-Write-Host "  ║        Installation Complete!  ✓             ║" -ForegroundColor Green
-Write-Host "  ╚══════════════════════════════════════════════╝" -ForegroundColor Green
+Write-Host "  +----------------------------------------------+" -ForegroundColor Green
+Write-Host "  |        Installation Complete!                |" -ForegroundColor Green
+Write-Host "  +----------------------------------------------+" -ForegroundColor Green
 Write-Host ""
 Write-Host "  The app is installed at: $APP_DIR" -ForegroundColor White
 Write-Host ""
 Write-Host "  To start the app:" -ForegroundColor White
-Write-Host "  → Double-click  'نظام الفواتير'  on the Desktop" -ForegroundColor Yellow
+Write-Host "  -> Double-click  'InvoiceSystem'  on the Desktop" -ForegroundColor Yellow
 Write-Host ""
 Write-Host "  To update the app in the future:" -ForegroundColor White
-Write-Host "  → Double-click  update.bat  in $APP_DIR" -ForegroundColor Yellow
+Write-Host "  -> Double-click  update.bat  in $APP_DIR" -ForegroundColor Yellow
 Write-Host ""
 Write-Host "  Installation log saved at:" -ForegroundColor White
 Write-Host "  $LOG_FILE" -ForegroundColor DarkGray
