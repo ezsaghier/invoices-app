@@ -184,7 +184,7 @@ OK "App files installed to $APP_DIR"
 
 Title "Step 4 of 4 - Creating Shortcuts"
 
-# run.bat
+# run.bat - kept for debugging purposes
 $runBat = "$APP_DIR\run.bat"
 $rc  = "@echo off`r`n"
 $rc += "cd /d D:\InvoicesApp`r`n"
@@ -194,30 +194,48 @@ $rc += "pause`r`n"
 [System.IO.File]::WriteAllText($runBat, $rc)
 OK "Created run.bat"
 
-# update.bat - downloads fresh ZIP and replaces app files
+# run.vbs - silent launcher (no terminal window)
+$runVbs = "$APP_DIR\run.vbs"
+$vbs  = "' Invoice System - Silent Launcher`r`n"
+$vbs += "Set objShell = CreateObject(`"WScript.Shell`")`r`n"
+$vbs += "objShell.CurrentDirectory = `"D:\InvoicesApp`"`r`n"
+$vbs += "objShell.Run `"python app.py`", 0, False`r`n"
+[System.IO.File]::WriteAllText($runVbs, $vbs)
+OK "Created run.vbs"
+
+# update.bat - stops app, downloads fresh ZIP, preserves database, restarts
 $updateBat = "$APP_DIR\update.bat"
 $uc  = "@echo off`r`n"
-$uc += "echo Downloading latest update...`r`n"
+$uc += "echo ================================================`r`n"
+$uc += "echo  Invoice System - Update`r`n"
+$uc += "echo ================================================`r`n"
+$uc += "echo.`r`n"
+$uc += "echo Step 1 - Stopping the app...`r`n"
+$uc += "taskkill /f /im python.exe >nul 2>&1`r`n"
+$uc += "timeout /t 2 /nobreak >nul`r`n"
+$uc += "echo Step 2 - Downloading latest update...`r`n"
 $uc += "powershell -NoProfile -ExecutionPolicy Bypass -Command `""
 $uc += "(New-Object System.Net.WebClient).DownloadFile('$GITHUB_ZIP', '%TEMP%\inv_update.zip'); "
 $uc += "Expand-Archive '%TEMP%\inv_update.zip' '%TEMP%\inv_update' -Force; "
 $uc += "`$src = (Get-ChildItem '%TEMP%\inv_update' | Select-Object -First 1).FullName; "
-$uc += "Copy-Item `"`$src\*`" 'D:\InvoicesApp\' -Recurse -Force; "
+$uc += "Get-ChildItem `"`$src`" | Where-Object { `$_.Name -notin @('invoices.db','backups') } | "
+$uc += "ForEach-Object { Copy-Item `$_.FullName 'D:\InvoicesApp\' -Recurse -Force }; "
 $uc += "Remove-Item '%TEMP%\inv_update.zip' -Force; "
 $uc += "Remove-Item '%TEMP%\inv_update' -Recurse -Force`"" + "`r`n"
-$uc += "echo Update complete. Starting app...`r`n"
+$uc += "echo Step 3 - Starting the app...`r`n"
 $uc += "cd /d D:\InvoicesApp`r`n"
 $uc += "python app.py`r`n"
 $uc += "pause`r`n"
 [System.IO.File]::WriteAllText($updateBat, $uc)
 OK "Created update.bat"
 
-# Desktop shortcut
+# Desktop shortcut pointing to silent VBS launcher
 $desktopPath  = [System.Environment]::GetFolderPath("Desktop")
 $shortcutPath = "$desktopPath\InvoiceSystem.lnk"
 $shell        = New-Object -ComObject WScript.Shell
 $shortcut     = $shell.CreateShortcut($shortcutPath)
-$shortcut.TargetPath       = $runBat
+$shortcut.TargetPath       = "wscript.exe"
+$shortcut.Arguments        = "`"$APP_DIR\run.vbs`""
 $shortcut.WorkingDirectory = $APP_DIR
 $shortcut.Description      = "Invoice Management System"
 $shortcut.IconLocation     = "shell32.dll,13"
