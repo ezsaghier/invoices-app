@@ -166,25 +166,6 @@ body {
   color: var(--sidebar-tx);
 }
 
-/* ─── THEME TOGGLE ───────────────────────────────────── */
-.theme-toggle {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  background: none;
-  border: 1px solid #333;
-  color: var(--sidebar-tx2);
-  font-family: 'Cairo', sans-serif;
-  font-size: 12px;
-  padding: 6px 10px;
-  cursor: pointer;
-  width: 100%;
-  justify-content: center;
-  transition: all 0.15s;
-}
-.theme-toggle:hover { border-color: var(--gold); color: var(--gold); }
-.theme-toggle .theme-icon { font-size: 14px; }
-
 /* ─── MAIN CONTENT ───────────────────────────────────── */
 .main {
   margin-right: var(--sidebar-w);

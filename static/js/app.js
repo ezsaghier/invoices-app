@@ -15,15 +15,6 @@ const THEME_KEY = 'inv-theme';
 
 function applyTheme(theme) {
   document.documentElement.setAttribute('data-theme', theme);
-  const btn   = document.getElementById('theme-toggle-btn');
-  const icon  = document.getElementById('theme-icon');
-  const label = document.getElementById('theme-label');
-  if (icon)  icon.textContent  = theme === 'dark' ? '☀️' : '🌙';
-  if (label && btn) {
-    label.textContent = theme === 'dark'
-      ? (btn.dataset.labelLight || '')   // currently dark → offer to switch to light
-      : (btn.dataset.labelDark  || '');  // currently light → offer to switch to dark
-  }
 }
 
 function toggleTheme() {
@@ -36,8 +27,7 @@ function toggleTheme() {
 function initTheme() {
   const saved = localStorage.getItem(THEME_KEY) || 'light';
   applyTheme(saved);
-  const btn = document.getElementById('theme-toggle-btn');
-  if (btn) btn.addEventListener('click', toggleTheme);
+  // Note: theme is now toggled from the Settings page only
 }
 
 
