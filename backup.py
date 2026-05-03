@@ -203,7 +203,43 @@ def list_backups():
     return all_files
 
 
+def get_backup_counts():
+    """Returns count of backup files per subfolder."""
+    counts = {}
+    for label, folder in [('daily', _daily_dir()), ('auto', _auto_dir()), ('manual', _manual_dir())]:
+        try:
+            counts[label] = len([
+                f for f in os.listdir(folder)
+                if f.startswith('backup_') and f.endswith('.db')
+            ])
+        except Exception:
+            counts[label] = 0
+    counts['total'] = sum(counts.values())
+    return counts
+
+
 def get_last_backup_info():
+    """
+    Returns info about the most recent backup for display on the dashboard.
+    Reads from latest_backup.db mtime for simplicity.
+    """
+    latest = _latest_backup_path()
+    if not os.path.exists(latest):
+        return {'exists': False, 'time': None, 'count': 0}
+
+    try:
+        mtime = os.path.getmtime(latest)
+        dt    = datetime.fromtimestamp(mtime).strftime('%Y-%m-%d %H:%M')
+    except Exception:
+        dt = '—'
+
+    total = sum(
+        len([f for f in os.listdir(d) if f.startswith('backup_') and f.endswith('.db')])
+        for d in [_daily_dir(), _auto_dir(), _manual_dir()]
+        if os.path.exists(d)
+    )
+
+    return {'exists': True, 'time': dt, 'count': total}
     """
     Returns info about the most recent backup for display on the dashboard.
     Reads from latest_backup.db mtime for simplicity.

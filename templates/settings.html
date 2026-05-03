@@ -1,0 +1,256 @@
+{% extends "base.html" %}
+{% block title %}{{ t.settings.title }}{% endblock %}
+{% block page_title %}{{ t.settings.title }}{% endblock %}
+
+{% block content %}
+<div style="max-width:700px">
+
+  <!-- ── BACKUP SECTION ─────────────────────────────── -->
+  <div class="card">
+    <div class="card-header">
+      <h2>{{ t.settings.backup_section }}</h2>
+    </div>
+    <div class="card-body">
+
+      <!-- Last backup status -->
+      <div class="subsection-label">{{ t.settings.backup_info_title }}</div>
+      <div class="detail-grid" style="margin-bottom:20px">
+
+        <div class="detail-cell">
+          <div class="dk">{{ t.settings.backup_last_label }}</div>
+          <div class="dv {% if backup_info.exists %}text-success{% else %}text-danger{% endif %}">
+            {% if backup_info.exists %}
+              {{ backup_info.time }}
+            {% else %}
+              {{ t.settings.backup_never }}
+            {% endif %}
+          </div>
+        </div>
+
+        <div class="detail-cell">
+          <div class="dk">{{ t.settings.backup_location_label }}</div>
+          <div class="dv mono" style="font-size:12px;word-break:break-all">
+            {{ backup_dir }}
+          </div>
+        </div>
+
+        <div class="detail-cell">
+          <div class="dk">{{ t.settings.backup_daily_count }}</div>
+          <div class="dv">{{ backup_counts.daily }}</div>
+        </div>
+
+        <div class="detail-cell">
+          <div class="dk">{{ t.settings.backup_auto_count }}</div>
+          <div class="dv">{{ backup_counts.auto }}</div>
+        </div>
+
+        <div class="detail-cell">
+          <div class="dk">{{ t.settings.backup_manual_count }}</div>
+          <div class="dv">{{ backup_counts.manual }}</div>
+        </div>
+
+        <div class="detail-cell">
+          <div class="dk">{{ t.settings.backup_count_label }}</div>
+          <div class="dv fw-bold">{{ backup_counts.total }}</div>
+        </div>
+
+      </div>
+
+      <!-- How backup works -->
+      <div class="subsection-label">{{ t.settings.backup_how_title }}</div>
+      <div class="info-list">
+        <div class="info-row">
+          <span class="info-icon">📅</span>
+          <span>{{ t.settings.backup_how_daily }}</span>
+        </div>
+        <div class="info-row">
+          <span class="info-icon">🔄</span>
+          <span>{{ t.settings.backup_how_auto }}</span>
+        </div>
+        <div class="info-row">
+          <span class="info-icon">👆</span>
+          <span>{{ t.settings.backup_how_manual }}</span>
+        </div>
+        <div class="info-row">
+          <span class="info-icon">📄</span>
+          <span>{{ t.settings.backup_how_latest }}</span>
+        </div>
+        <div class="info-row">
+          <span class="info-icon">🛡️</span>
+          <span>{{ t.settings.backup_how_wal }}</span>
+        </div>
+      </div>
+
+      <!-- Action buttons -->
+      <div class="d-flex gap-2" style="margin-top:20px">
+        <form action="{{ url_for('manual_backup') }}" method="post">
+          <button type="submit" class="btn btn-primary">
+            {{ t.settings.btn_manual_backup }}
+          </button>
+        </form>
+
+        <form action="{{ url_for('restore_backup') }}" method="post">
+          <button type="submit" class="btn btn-outline" disabled
+                  title="{{ t.settings.btn_restore_soon }}">
+            {{ t.settings.btn_restore }}
+            <span style="font-size:11px;opacity:0.6;margin-right:6px">
+              ({{ t.settings.btn_restore_soon }})
+            </span>
+          </button>
+        </form>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- ── APPEARANCE SECTION ─────────────────────────── -->
+  <div class="card">
+    <div class="card-header">
+      <h2>{{ t.settings.appearance_section }}</h2>
+    </div>
+    <div class="card-body">
+
+      <div class="subsection-label">{{ t.settings.appearance_title }}</div>
+      <p class="text-muted" style="margin-bottom:16px">
+        {{ t.settings.appearance_desc }}
+      </p>
+
+      <div class="theme-switch-row">
+        <!-- Light option -->
+        <div class="theme-option" id="theme-opt-light" onclick="setTheme('light')">
+          <div class="theme-preview theme-preview-light">
+            <div class="preview-sidebar"></div>
+            <div class="preview-content">
+              <div class="preview-bar"></div>
+              <div class="preview-card"></div>
+            </div>
+          </div>
+          <div class="theme-option-label">☀️ {{ t.settings.theme_light }}</div>
+        </div>
+
+        <!-- Dark option -->
+        <div class="theme-option" id="theme-opt-dark" onclick="setTheme('dark')">
+          <div class="theme-preview theme-preview-dark">
+            <div class="preview-sidebar"></div>
+            <div class="preview-content">
+              <div class="preview-bar"></div>
+              <div class="preview-card"></div>
+            </div>
+          </div>
+          <div class="theme-option-label">🌙 {{ t.settings.theme_dark }}</div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+</div>
+{% endblock %}
+
+{% block scripts %}
+<style>
+  .subsection-label {
+    font-size: 12px;
+    font-weight: 700;
+    color: var(--text3);
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    margin-bottom: 12px;
+    margin-top: 4px;
+  }
+
+  .info-list { display: flex; flex-direction: column; gap: 10px; }
+  .info-row {
+    display: flex;
+    align-items: flex-start;
+    gap: 12px;
+    font-size: 13.5px;
+    color: var(--text2);
+    padding: 8px 12px;
+    background: var(--surface2);
+    border-right: 3px solid var(--border2);
+  }
+  .info-icon { font-size: 16px; flex-shrink: 0; margin-top: 1px; }
+
+  /* Theme switcher */
+  .theme-switch-row {
+    display: flex;
+    gap: 20px;
+    flex-wrap: wrap;
+  }
+  .theme-option {
+    cursor: pointer;
+    flex: 1;
+    min-width: 160px;
+    max-width: 220px;
+  }
+  .theme-preview {
+    border: 2px solid var(--border2);
+    height: 90px;
+    display: flex;
+    overflow: hidden;
+    margin-bottom: 8px;
+    transition: border-color 0.2s;
+  }
+  .theme-option:hover .theme-preview { border-color: var(--gold); }
+  .theme-option.active .theme-preview {
+    border-color: var(--gold);
+    box-shadow: 0 0 0 2px var(--gold);
+  }
+
+  /* Light preview */
+  .theme-preview-light .preview-sidebar {
+    width: 28px; background: #0d0d0d; flex-shrink: 0;
+  }
+  .theme-preview-light .preview-content {
+    flex: 1; background: #f7f7f7; padding: 6px;
+    display: flex; flex-direction: column; gap: 5px;
+  }
+  .theme-preview-light .preview-bar {
+    height: 12px; background: #ffffff; border: 1px solid #e0e0e0;
+  }
+  .theme-preview-light .preview-card {
+    flex: 1; background: #ffffff; border: 1px solid #e0e0e0;
+  }
+
+  /* Dark preview */
+  .theme-preview-dark .preview-sidebar {
+    width: 28px; background: #0a0a0a; flex-shrink: 0;
+  }
+  .theme-preview-dark .preview-content {
+    flex: 1; background: #111111; padding: 6px;
+    display: flex; flex-direction: column; gap: 5px;
+  }
+  .theme-preview-dark .preview-bar {
+    height: 12px; background: #1c1c1c; border: 1px solid #333;
+  }
+  .theme-preview-dark .preview-card {
+    flex: 1; background: #1c1c1c; border: 1px solid #333;
+  }
+
+  .theme-option-label {
+    font-size: 13px;
+    font-weight: 700;
+    text-align: center;
+    color: var(--text2);
+  }
+  .theme-option.active .theme-option-label { color: var(--gold); }
+</style>
+
+<script>
+  function setTheme(theme) {
+    // Reuse the existing theme system from app.js
+    localStorage.setItem('inv-theme', theme);
+    applyTheme(theme);
+    // Update active state on options
+    document.getElementById('theme-opt-light').classList.toggle('active', theme === 'light');
+    document.getElementById('theme-opt-dark').classList.toggle('active', theme  === 'dark');
+  }
+
+  // Mark active on page load
+  document.addEventListener('DOMContentLoaded', function() {
+    const current = localStorage.getItem('inv-theme') || 'light';
+    document.getElementById('theme-opt-' + current).classList.add('active');
+  });
+</script>
+{% endblock %}

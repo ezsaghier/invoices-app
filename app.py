@@ -253,6 +253,28 @@ def _build_invoice_from_form():
     }}
 
 # ─────────────────────────────────────────────────────────────────
+# SETTINGS
+# ─────────────────────────────────────────────────────────────────
+
+@app.route('/settings')
+def settings():
+    backup_info = backup.get_last_backup_info()
+    backup_counts = backup.get_backup_counts()
+    backup_dir = os.path.join(db.get_app_dir(), 'backups')
+    return render_template('settings.html',
+                           backup_info=backup_info,
+                           backup_counts=backup_counts,
+                           backup_dir=backup_dir)
+
+
+@app.route('/settings/restore', methods=['POST'])
+def restore_backup():
+    # Placeholder — logic not implemented yet
+    flash(LANG['settings']['restore_not_implemented'], 'info')
+    return redirect(url_for('settings'))
+
+
+# ─────────────────────────────────────────────────────────────────
 # AUTOCOMPLETE
 # ─────────────────────────────────────────────────────────────────
 

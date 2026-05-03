@@ -1,4 +1,33 @@
 {
+  "settings": {
+    "title": "الإعدادات",
+    "backup_section": "النسخ الاحتياطي",
+    "backup_info_title": "معلومات النسخ الاحتياطي",
+    "backup_last_label": "آخر نسخة احتياطية",
+    "backup_never": "لم يتم نسخ احتياطي بعد",
+    "backup_count_label": "عدد النسخ المحفوظة",
+    "backup_location_label": "مجلد النسخ الاحتياطية",
+    "backup_daily_count": "نسخ يومية",
+    "backup_auto_count": "نسخ تلقائية",
+    "backup_manual_count": "نسخ يدوية",
+    "backup_how_title": "كيف يعمل النسخ الاحتياطي",
+    "backup_how_daily": "يومي — عند أول تشغيل للتطبيق كل يوم",
+    "backup_how_auto": "تلقائي — كل 50 عملية تغيير على البيانات",
+    "backup_how_manual": "يدوي — عند الضغط على زر النسخ الاحتياطي",
+    "backup_how_latest": "في كل مرة يتم فيها نسخ احتياطي يُحدَّث ملف latest_backup.db",
+    "backup_how_wal": "قاعدة البيانات محمية من انقطاع الكهرباء تلقائياً (SQLite WAL)",
+    "backup_restore_title": "استعادة نسخة احتياطية",
+    "backup_restore_desc": "لاستعادة بياناتك من نسخة احتياطية سابقة",
+    "btn_manual_backup": "💾 نسخ احتياطي الآن",
+    "btn_restore": "↩️ استعادة نسخة احتياطية",
+    "btn_restore_soon": "قريباً",
+    "appearance_section": "المظهر",
+    "appearance_title": "وضع العرض",
+    "appearance_desc": "اختر بين الوضع الفاتح والوضع الداكن",
+    "theme_light": "وضع النهار",
+    "theme_dark": "وضع الليل",
+    "restore_not_implemented": "ميزة الاستعادة ستكون متاحة في تحديث قادم"
+  },
   "theme": {
     "to_dark":  "وضع الليل",
     "to_light": "وضع النهار"
@@ -11,6 +40,7 @@
     "dashboard": "لوحة التحكم",
     "customers": "الزبائن",
     "invoices": "الفواتير",
+    "settings": "الإعدادات",
     "backup": "نسخ احتياطي"
   },
   "dashboard": {
