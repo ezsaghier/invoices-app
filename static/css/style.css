@@ -201,6 +201,7 @@ body {
 }
 .flash.success { background: var(--flash-success-bg); border-color: var(--flash-success-bd); color: var(--flash-success-tx); }
 .flash.error   { background: var(--flash-error-bg);   border-color: var(--flash-error-bd);   color: var(--flash-error-tx); }
+.flash.info    { background: var(--surface2); border-color: var(--gold); color: var(--text2); }
 
 /* ─── CARDS ──────────────────────────────────────────── */
 .card { background: var(--surface); border: 1px solid var(--border); margin-bottom: 20px; }

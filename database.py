@@ -4,10 +4,32 @@ import sys
 
 
 def get_app_dir():
-    """Returns the directory of the .exe (when frozen) or the script directory."""
-    if getattr(sys, 'frozen', False):
-        return os.path.dirname(sys.executable)
-    return os.path.dirname(os.path.abspath(__file__))
+    """
+    Returns the install directory of the app.
+    Priority:
+      1. INVOICES_APP_DIR environment variable (set by run.vbs / run.bat)
+      2. install_path.txt file next to this script
+      3. Directory of this script (fallback for development)
+    """
+    # 1. Environment variable set by launcher
+    env_dir = os.environ.get('INVOICES_APP_DIR')
+    if env_dir and os.path.isdir(env_dir):
+        return env_dir
+
+    # 2. install_path.txt written during installation
+    script_dir = os.path.dirname(os.path.abspath(__file__))
+    path_file  = os.path.join(script_dir, 'install_path.txt')
+    if os.path.exists(path_file):
+        try:
+            with open(path_file, 'r') as f:
+                stored = f.read().strip()
+            if stored and os.path.isdir(stored):
+                return stored
+        except Exception:
+            pass
+
+    # 3. Fallback — directory of this script
+    return script_dir
 
 
 def get_db_path():

@@ -9,6 +9,18 @@
 
 'use strict';
 
+// ─── HEARTBEAT — keeps app alive while browser is open ──────────
+// Pings /heartbeat every 15 seconds.
+// When browser is closed, pings stop → app exits after 40s.
+
+function _startHeartbeat() {
+  const ping = () => {
+    fetch('/heartbeat', { method: 'POST' }).catch(() => {});
+  };
+  ping(); // immediate ping on load
+  setInterval(ping, 15000);
+}
+
 // ─── THEME ─────────────────────────────────────────────────────
 
 const THEME_KEY = 'inv-theme';
@@ -398,6 +410,8 @@ function escHtml(str) {
 // ─── INIT ───────────────────────────────────────────────────────
 
 document.addEventListener('DOMContentLoaded', () => {
+  // Heartbeat — keeps app process alive while browser is open
+  _startHeartbeat();
   // Theme
   initTheme();
 

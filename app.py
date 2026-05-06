@@ -1,5 +1,7 @@
 import json
 import os
+import sys
+import time
 import threading
 import webbrowser
 
@@ -11,6 +13,34 @@ import backup
 
 app = Flask(__name__)
 app.secret_key = 'inv-app-secret-key-2026-xZ9'
+
+# ─────────────────────────────────────────────────────────────────
+# HEARTBEAT — shut down when browser is closed
+# Browser pings /heartbeat every 15s. If no ping for 40s → exit.
+# ─────────────────────────────────────────────────────────────────
+
+_last_heartbeat = time.time()
+_HEARTBEAT_TIMEOUT = 40   # seconds
+
+def _heartbeat_watchdog():
+    """Background thread — exits the process if browser goes silent."""
+    # Wait a bit on startup before monitoring
+    time.sleep(20)
+    while True:
+        time.sleep(10)
+        if time.time() - _last_heartbeat > _HEARTBEAT_TIMEOUT:
+            # Do a final backup before exiting
+            try:
+                backup.do_manual_backup()
+            except Exception:
+                pass
+            os._exit(0)
+
+@app.route('/heartbeat', methods=['POST'])
+def heartbeat():
+    global _last_heartbeat
+    _last_heartbeat = time.time()
+    return '', 204
 
 # ─────────────────────────────────────────────────────────────────
 # LOCALIZATION
@@ -317,4 +347,5 @@ if __name__ == '__main__':
     db.init_db()
     backup.init_backup()
     threading.Timer(1.2, open_browser).start()
+    threading.Thread(target=_heartbeat_watchdog, daemon=True).start()
     app.run(debug=False, port=PORT, use_reloader=False, host='127.0.0.1')
