@@ -7,4 +7,6 @@ __pycache__/
 dist/
 build/
 *.spec
+install_path.txt
+run.bat
 last_daily_backup.txt

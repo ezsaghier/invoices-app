@@ -8,7 +8,7 @@
 # ================================================================
 
 # -- Config ------------------------------------------------------
-$REPO_URL   = "https://github.com/ezsaghier/invoices-app.git"
+$REPO_URL   = "https://github.com/ezsaghier/invoices_app.git"
 $PYTHON_URL = "https://www.python.org/ftp/python/3.11.9/python-3.11.9-amd64.exe"
 $GIT_URL    = "https://github.com/git-for-windows/git/releases/download/v2.44.0.windows.1/Git-2.44.0-64-bit.exe"
 $FOLDER_NAME = "InvoicesApp"
@@ -223,7 +223,7 @@ Log "pip: $result"
 if ($LASTEXITCODE -ne 0) { FAIL "Flask install failed" }
 OK "Flask installed"
 
-# run.bat (for debugging - visible terminal)
+# run.bat (debug only - visible terminal - machine specific, gitignored)
 $runBat = "$APP_DIR\run.bat"
 $rb  = "@echo off`r`n"
 $rb += "set INVOICES_APP_DIR=$APP_DIR`r`n"
@@ -232,53 +232,11 @@ $rb += "echo Starting Invoice System...`r`n"
 $rb += "python app.py`r`n"
 $rb += "pause`r`n"
 [System.IO.File]::WriteAllText($runBat, $rb)
-OK "Created run.bat"
+OK "Created run.bat (debug launcher)"
 
-# run.vbs (silent - no terminal window)
-$runVbs = "$APP_DIR\run.vbs"
-$vb  = "' Invoice System - Silent Launcher`r`n"
-$vb += "Dim objShell, objFSO, appDir, pathFilePath`r`n"
-$vb += "Set objShell = CreateObject(`"WScript.Shell`")`r`n"
-$vb += "Set objFSO   = CreateObject(`"Scripting.FileSystemObject`")`r`n"
-$vb += "appDir = `"$APP_DIR`"`r`n"
-$vb += "pathFilePath = appDir & `"\install_path.txt`"`r`n"
-$vb += "If objFSO.FileExists(pathFilePath) Then`r`n"
-$vb += "    Dim ts : Set ts = objFSO.OpenTextFile(pathFilePath, 1)`r`n"
-$vb += "    Dim stored : stored = Trim(ts.ReadLine()) : ts.Close`r`n"
-$vb += "    If objFSO.FolderExists(stored) Then appDir = stored`r`n"
-$vb += "End If`r`n"
-$vb += "objShell.Environment(`"Process`")(`"INVOICES_APP_DIR`") = appDir`r`n"
-$vb += "objShell.CurrentDirectory = appDir`r`n"
-$vb += "objShell.Run `"python app.py`", 0, False`r`n"
-[System.IO.File]::WriteAllText($runVbs, $vb)
-OK "Created run.vbs"
-
-# update.bat
-$updateBat = "$APP_DIR\update.bat"
-$ub  = "@echo off`r`n"
-$ub += "echo ================================================`r`n"
-$ub += "echo  Invoice System - Update`r`n"
-$ub += "echo ================================================`r`n"
-$ub += "echo.`r`n"
-$ub += "echo Step 1 - Stopping app...`r`n"
-$ub += "taskkill /f /im python.exe >nul 2>&1`r`n"
-$ub += "timeout /t 2 /nobreak >nul`r`n"
-$ub += "echo Step 2 - Checking Git...`r`n"
-$ub += "where git >nul 2>&1`r`n"
-$ub += "if %errorlevel% neq 0 (`r`n"
-$ub += "    echo Git not found. Please run install.bat first.`r`n"
-$ub += "    pause`r`n"
-$ub += "    exit /b 1`r`n"
-$ub += ")`r`n"
-$ub += "echo Step 3 - Pulling latest update...`r`n"
-$ub += "cd /d $APP_DIR`r`n"
-$ub += "git pull`r`n"
-$ub += "echo Step 4 - Starting app...`r`n"
-$ub += "wscript.exe `"$APP_DIR\run.vbs`"`r`n"
-$ub += "echo App is starting - you can close this window.`r`n"
-$ub += "pause`r`n"
-[System.IO.File]::WriteAllText($updateBat, $ub)
-OK "Created update.bat"
+# Note: run.vbs and update.bat are NOT generated here.
+# They are provided by git clone from the repo and contain
+# dynamic install_path.txt reading - do not overwrite them.
 
 # Desktop shortcut (works for ALL user accounts on this machine)
 $desktopPath  = [System.Environment]::GetFolderPath("CommonDesktopDirectory")
