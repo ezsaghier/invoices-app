@@ -204,6 +204,15 @@ Set-Content -Path $pathFile -Value $APP_DIR -Encoding UTF8
 OK "Install path saved: $pathFile"
 Log "install_path.txt written: $APP_DIR"
 
+# Fix Git ownership issue - add safe.directory for all users
+INFO "Configuring Git safe directory..."
+$safePath = $APP_DIR.Replace('\', '/')
+& git config --global --add safe.directory $safePath 2>&1 | Out-Null
+& git config --global --add safe.directory C:/InvoicesApp 2>&1 | Out-Null
+& git config --global --add safe.directory D:/InvoicesApp 2>&1 | Out-Null
+OK "Git safe directory configured"
+Log "Git safe.directory set for: $safePath"
+
 # -- Step 5: Flask + Shortcuts -----------------------------------
 
 Title "Step 5 of 5 - Flask and Shortcuts"
