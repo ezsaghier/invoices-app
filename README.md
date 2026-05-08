@@ -1,190 +1,208 @@
-# Invoice Management System
-### نظام إدارة الفواتير والمدفوعات
-**Electrical Parts & Solar Panels Store**
+# نظام إدارة الفواتير والمدفوعات
+### لمتاجر قطع الكهرباء واللوحات الشمسية
 
 ---
 
-## Overview
+## نظرة عامة
 
-A fully offline desktop web application for managing customer invoices and payments.
-Built with Python + Flask + SQLite. No internet required after installation.
-Runs on Windows 10 (64-bit) by double-clicking a shortcut — no technical knowledge needed.
+تطبيق سطح مكتب يعمل **بدون إنترنت**، مصمَّم لإدارة فواتير وزبائن ومدفوعات متجر قطع كهربائية ولوحات شمسية.
 
----
-
-## Features
-
-- **Customer management** — name, address, phone, notes
-- **Invoice management** — manual invoice numbers, multiple line items, first payment option
-- **Multi-currency** — USD / Syrian Pound (new) / Syrian Pound (old)
-- **Payments tracking** — cash or Sham Cash, full payment history per invoice
-- **Item autocomplete** — learns item descriptions as you type, no manual catalog needed
-- **New customer modal** — create a new customer from within the invoice form without losing data
-- **Dark / Light theme** — toggle from the sidebar
-- **Arabic UI** — fully localized, all text in `localization-ar.json`
-- **Decimal support** — prices and amounts support up to 2 decimal places
+يُشغَّل بنقرة مزدوجة على أيقونة سطح المكتب — لا تثبيت معقد، لا خبرة تقنية مطلوبة.
 
 ---
 
-## Backup System
+## المميزات
 
-Three automatic backup triggers, all stored in `D:\InvoicesApp\backups\`:
+### إدارة الزبائن
+- إضافة وتعديل بيانات الزبون (الاسم، الهاتف، العنوان، الملاحظات)
+- بحث سريع في قائمة الزبائن
+- عرض سجل الفواتير الكامل لكل زبون
+- ملخص الديون المستحقة لكل زبون مجمَّعاً حسب العملة
 
-```
-backups/
-  latest_backup.db        ← always the most recent backup (overwritten each time)
-  daily/                  ← one backup per day on first app launch (keeps last 30)
-  auto/                   ← every 50 DB operations (keeps last 20)
-  manual/                 ← user triggered via sidebar button (keeps last 20)
-```
+### إدارة الفواتير
+- رقم فاتورة يدخله المستخدم يدوياً
+- بنود متعددة لكل فاتورة مع حساب المجاميع تلقائياً
+- الأسعار تُدخل يدوياً في كل مرة — يدعم أسعاراً مختلفة للصنف نفسه
+- إكمال تلقائي لأسماء الأصناف عند الكتابة (يتعلم من الفواتير السابقة)
+- دفعة أولى اختيارية عند إنشاء الفاتورة
+- إنشاء زبون جديد من داخل نموذج الفاتورة دون فقدان البيانات المدخلة
+- حالة الفاتورة: مسددة / جزئية / معلقة
 
-**To change the auto backup threshold**, open `backup.py` and edit line 24:
-```python
-AUTO_BACKUP_EVERY_N_CHANGES = 50   # change this number anytime
-```
+### إدارة المدفوعات
+- تسجيل دفعات متعددة لكل فاتورة
+- طريقة الدفع: نقداً أو شام كاش
+- تحديث الرصيد المتبقي تلقائياً بعد كل دفعة
+- سجل كامل لجميع الدفعات مع التاريخ والملاحظات
 
-**To restore from a backup**, copy any `.db` file from the `backups/` folder
-and rename it to `invoices.db` in `D:\InvoicesApp\`.
+### العملات المدعومة
+- دولار أمريكي (USD) — الافتراضي
+- ليرة سورية جديدة (ل.س ج)
+- ليرة سورية قديمة (ل.س ق)
+- كل فاتورة بعملتها الخاصة — لا تحويل بين العملات
+- المبالغ تدعم خانتين عشريتين (مثال: 99.50)
+
+### واجهة المستخدم
+- واجهة عربية كاملة مع دعم RTL
+- وضع ليلي / نهاري قابل للتبديل من صفحة الإعدادات
+- لوحة تحكم تعرض إجمالي الديون مجمَّعة حسب العملة
+- جميع النصوص في ملف مركزي قابل للتعديل (`localization-ar.json`)
+
+### صفحة الإعدادات
+- معلومات تفصيلية عن حالة النسخ الاحتياطي
+- زر نسخ احتياطي يدوي
+- تبديل الوضع الليلي / النهاري
 
 ---
 
-## Tech Stack
+## نظام النسخ الاحتياطي
 
-| Component | Technology |
+### طبقات الحماية
+
+| الطبقة | الوصف |
 |---|---|
-| Backend | Python 3.11 + Flask |
-| Database | SQLite (WAL mode — crash safe) |
-| Frontend | HTML + CSS + Vanilla JavaScript |
-| Localization | JSON file (`localization-ar.json`) |
-| Launcher | VBScript (`run.vbs`) — no terminal window |
+| **SQLite WAL** | حماية فورية — لا ضياع للبيانات عند انقطاع الكهرباء المفاجئ |
+| **نسخ يومي** | تلقائي عند أول تشغيل للتطبيق كل يوم |
+| **نسخ تلقائي** | كل 50 عملية تغيير على البيانات |
+| **نسخ يدوي** | بضغطة زر من صفحة الإعدادات في أي وقت |
+
+### هيكل مجلد النسخ الاحتياطية
+
+```
+D:\InvoicesApp\backups\
+  latest_backup.db      ← آخر نسخة احتياطية (تُستبدل في كل مرة)
+  daily\                ← نسخ يومية (آخر 30 نسخة)
+  auto\                 ← نسخ تلقائية (آخر 20 نسخة)
+  manual\               ← نسخ يدوية (آخر 20 نسخة)
+```
+
+### تغيير عدد العمليات المحفِّزة للنسخ التلقائي
+افتح `backup.py` وعدّل السطر:
+```python
+AUTO_BACKUP_EVERY_N_CHANGES = 50   # غيّر هذا الرقم حسب الحاجة
+```
+
+### استعادة البيانات
+انسخ أي ملف `.db` من مجلد `backups\` وأعد تسميته إلى `invoices.db` في مجلد التطبيق.
 
 ---
 
-## Project Structure
+## التثبيت على جهاز جديد
+
+### المتطلبات
+- Windows 10 أو أحدث
+- اتصال بالإنترنت (مرة واحدة فقط للتثبيت)
+- القرص D: أو C: متاح
+
+### خطوات التثبيت
+
+1. حمّل ملفَي `install.bat` و `install.ps1` من:
+   `https://github.com/ezsaghier/invoices_app`
+
+2. ضع الملفين في نفس المجلد
+
+3. انقر بزر الماوس الأيمن على `install.bat` ← **تشغيل كمسؤول**
+
+4. اتبع التعليمات على الشاشة
+
+يقوم المثبِّت تلقائياً بـ:
+- اختيار موقع التثبيت: القرص D: أولاً، ثم C: إذا لم يكن D: متاحاً
+- تثبيت Python إذا لم يكن موجوداً
+- تثبيت Git وضبط إعداداته
+- تحميل ملفات التطبيق من GitHub
+- كتابة `install_path.txt` لضمان عمل التطبيق مع جميع حسابات المستخدمين
+- إنشاء أيقونة **InvoiceSystem** على سطح المكتب لجميع المستخدمين
+
+---
+
+## الاستخدام اليومي
+
+| الإجراء | الطريقة |
+|---|---|
+| تشغيل التطبيق | النقر المزدوج على **InvoiceSystem** في سطح المكتب |
+| إيقاف التطبيق | إغلاق نافذة المتصفح — يتوقف تلقائياً خلال 40 ثانية |
+| نسخ احتياطي يدوي | صفحة الإعدادات ← زر نسخ احتياطي |
+| تحديث التطبيق | النقر المزدوج على `update.bat` في مجلد التطبيق |
+
+---
+
+## التحديثات المستقبلية
+
+عند صدور نسخة جديدة، يقوم المستخدم بخطوة واحدة فقط:
 
 ```
-invoices-app/
-  app.py                    Flask application + all routes
-  database.py               SQLite setup, all queries
-  backup.py                 Backup system (daily / auto / manual)
-  localization-ar.json      All Arabic UI text — edit freely in Notepad
-  seed.py                   Test data generator (development only)
-  run.vbs                   Silent launcher for Windows
-  update.bat                Pull latest updates from GitHub + restart app
-  install.bat               First-time installer launcher
-  install.ps1               Full installer script (PowerShell)
-  static/
-    css/style.css           Light + dark theme styles
-    js/app.js               Autocomplete, invoice items, theme toggle, modal
-  templates/
-    base.html               Layout, sidebar, theme toggle, new-customer modal
-    dashboard.html          Stats, debt summary, recent invoices
-    customers/
-      list.html             Customer list with search
-      form.html             Add / edit customer
-      detail.html           Customer profile + invoice history
-    invoices/
-      list.html             Invoice list with filter and search
-      form.html             New invoice form
-      detail.html           Invoice detail + payment form + payment history
+انقر مرتين على:
+update.bat   (موجود في مجلد التطبيق)
+```
+
+يقوم السكريبت تلقائياً بـ:
+1. إيقاف التطبيق
+2. التحقق من وجود Git وتثبيته إذا لزم
+3. تحميل آخر تحديث من GitHub
+4. إعادة تشغيل التطبيق
+
+> **ملاحظة مهمة:** عملية التحديث لا تمسّ `invoices.db` أو مجلد `backups\` — بيانات المستخدم آمنة دائماً.
+
+---
+
+## ملفات مهمة على جهاز المستخدم
+
+| المسار | المحتوى |
+|---|---|
+| `D:\InvoicesApp\` | كل ملفات التطبيق |
+| `D:\InvoicesApp\invoices.db` | قاعدة البيانات — لا تُحذف أبداً |
+| `D:\InvoicesApp\install_path.txt` | مسار التثبيت — يُقرأ من جميع حسابات المستخدمين |
+| `D:\InvoicesApp\backups\` | كل النسخ الاحتياطية |
+| `D:\InvoicesApp\backups\latest_backup.db` | آخر نسخة احتياطية |
+| `D:\InvoicesApp\run.vbs` | مشغِّل التطبيق الصامت (بدون نافذة سوداء) |
+| `D:\InvoicesApp\update.bat` | سكريبت التحديث |
+| `D:\InvoicesApp\localization-ar.json` | جميع النصوص العربية — قابل للتعديل بالمفكرة |
+
+---
+
+## ملفات مُستثناة من GitHub
+
+الملفات التالية خاصة بكل جهاز ولا تُرفع إلى GitHub:
+
+```
+invoices.db          ← قاعدة البيانات
+backups/             ← النسخ الاحتياطية
+install_path.txt     ← مسار التثبيت
+run.bat              ← مشغِّل التصحيح
+last_daily_backup.txt← سجل آخر نسخة يومية
 ```
 
 ---
 
-## Localization
+## للمطوِّر
 
-All visible Arabic text lives in `localization-ar.json`.
-To change any label, button, or message — open the file in Notepad and edit the value.
-No code changes needed. Changes take effect on next app restart.
+### تشغيل التطبيق محلياً (Mac)
 
-```json
-{
-  "btn": {
-    "save": "حفظ",
-    "cancel": "إلغاء"
-  },
-  "messages": {
-    "invoice_created": "تم إنشاء الفاتورة بنجاح"
-  }
-}
-```
-
----
-
-## Developer Guide
-
-### Prerequisites
-- Python 3.11+
-- pip
-
-### Run locally (Mac / Windows)
-```bash
-pip install flask
-python app.py
-# Opens at http://127.0.0.1:5001
-```
-
-> **Mac note:** Port 5001 is used instead of 5000 because macOS AirPlay blocks port 5000.
-
-### Fill with test data
-```bash
-python seed.py
-# type 'yes' when prompted
-```
-
-### Push an update
 ```bash
 cd /Users/ezzedeen/Documents/GitHub/invoices-app
-git add .
-git commit -m "feat: describe what changed"
-git push
+pip install flask
+python app.py
+# يفتح المتصفح على http://127.0.0.1:5001
 ```
 
----
+> **ملاحظة Mac:** يُستخدم المنفذ 5001 بدلاً من 5000 لأن macOS يحجب 5000 لخدمة AirPlay.
 
-## Customer Update Process
+### تعبئة بيانات تجريبية
 
-When a new version is pushed to GitHub, the customer runs one file:
-
+```bash
+python seed.py
+# اكتب 'yes' عند الطلب
 ```
-Double-click  D:\InvoicesApp\update.bat
-```
 
-The script automatically:
-1. Stops the running app
-2. Pulls latest code from GitHub (`git pull`)
-3. Restarts the app silently
+### نشر تحديث جديد (VSCode)
+1. عدِّل الملفات
+2. في VSCode: `Source Control` ← أدخل رسالة الـ commit ← `Commit` ← `Push`
 
-> **Important:** `update.bat` never touches `invoices.db` or the `backups/` folder.
-> Customer data is always safe during updates.
+### تعديل النصوص
+افتح `localization-ar.json` بأي محرر نصوص وعدِّل القيم.
+التغييرات تظهر فور إعادة تشغيل التطبيق — لا تعديل في الكود.
 
 ---
 
-## First-time Installation (Customer)
+## المستودع
 
-1. Download `install.bat` and `install.ps1` from this repo
-2. Place both files in the same folder
-3. Double-click `install.bat`
-4. The script installs Python, Git, Flask, clones the repo, and creates a Desktop shortcut
-
-Requirements: Windows 10, internet connection, drive D: available.
-
----
-
-## File Locations (Customer Machine)
-
-| Path | Contents |
-|---|---|
-| `D:\InvoicesApp\` | All app files |
-| `D:\InvoicesApp\invoices.db` | The database — never delete |
-| `D:\InvoicesApp\backups\` | All backup files |
-| `D:\InvoicesApp\backups\latest_backup.db` | Most recent backup |
-| `D:\InvoicesApp\run.vbs` | Silent launcher |
-| `D:\InvoicesApp\update.bat` | Update script |
-
----
-
-## GitHub
-
-**Repository:** https://github.com/ezsaghier/invoices-app
-**Developer:** ezsaghier
+**GitHub:** https://github.com/ezsaghier/invoices_app
